@@ -267,6 +267,11 @@ namespace GameboyEmulator
             return (byte)value;
         }
 
+        void CpBytes(byte a, byte b)
+        {
+            SubBytes(a, b);
+        }
+
         /// <summary>
         /// Adds the given bytes and sets any affected flags.
         /// </summary>
@@ -1387,7 +1392,7 @@ namespace GameboyEmulator
             RegA = XorBytes(RegA, RegL);
         }
 
-        [Op(0xAE, 48, "XOR (HL)")]
+        [Op(0xAE, 8, "XOR (HL)")]
         void XOR_HL()
         {
             var storedValue = Mmu.ReadByte(HL);
@@ -1399,6 +1404,66 @@ namespace GameboyEmulator
         {
             var storedValue = ReadByte();
             RegA = XorBytes(RegA, storedValue);
+        }
+
+        #endregion
+
+        #region CP
+
+        [Op(0xBF, 4, "CP A")]
+        void CP_A()
+        {
+            CpBytes(RegA, RegA);
+        }
+
+        [Op(0xB8, 4, "CP B")]
+        void CP_B()
+        {
+            CpBytes(RegA, RegB);
+        }
+
+        [Op(0xB9, 4, "CP C")]
+        void CP_C()
+        {
+            CpBytes(RegA, RegC);
+        }
+
+        [Op(0xBA, 4, "CP D")]
+        void CP_D()
+        {
+            CpBytes(RegA, RegD);
+        }
+
+        [Op(0xBB, 4, "CP E")]
+        void CP_E()
+        {
+            CpBytes(RegA, RegE);
+        }
+
+        [Op(0xBC, 4, "CP H")]
+        void CP_H()
+        {
+            CpBytes(RegA, RegH);
+        }
+
+        [Op(0xBD, 4, "CP L")]
+        void CP_L()
+        {
+            CpBytes(RegA, RegL);
+        }
+
+        [Op(0xBE, 8, "CP (HL)")]
+        void CP_HL()
+        {
+            var storedValue = Mmu.ReadByte(HL);
+            CpBytes(RegA, storedValue);
+        }
+
+        [Op(0xFE, 8, "CP n")]
+        void CP_n()
+        {
+            var storedValue = ReadByte();
+            CpBytes(RegA, storedValue);
         }
 
         #endregion
