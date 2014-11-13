@@ -1201,6 +1201,15 @@ namespace GameboyEmulator
             HL = AddWords(HL, SP);
         }
 
+        [Op(0xE8, 16, "ADD SP n")]
+        void ADD_SPn()
+        {
+            var value = ReadByte();
+            SP = AddWords(SP, value);
+            ZeroFlag = false;
+            OperationFlag = false;
+        }
+
         #endregion
 
         #region SUB
