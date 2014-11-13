@@ -210,6 +210,64 @@ namespace GameboyEmulator
             return (byte)value;
         }
 
+        byte IncByte(byte a)
+        {
+            var value = a + 1;
+            while (value > byte.MaxValue)
+            {
+                value = (value - byte.MaxValue) + byte.MinValue;
+            }
+
+            // calculate half carry
+            var lowNibbles = a.LowNibble() + 1;
+            HalfCarryFlag = lowNibbles > 15;
+
+            OperationFlag = false;
+            ZeroFlag = value == 0;
+
+            return (byte)value;
+        }
+
+        byte DecByte(byte a)
+        {
+            var value = a - 1;
+            while (value < byte.MinValue)
+            {
+                value = byte.MaxValue - (value - byte.MinValue);
+            }
+
+            // calculate half carry
+            // this is probably wrong
+            var lowNibbles = a.LowNibble() - 1;
+            HalfCarryFlag = lowNibbles > 0;
+
+            OperationFlag = true;
+            ZeroFlag = value == 0;
+
+            return (byte)value;
+        }
+
+        byte DecWord(ushort a)
+        {
+            var value = a - 1;
+            while (value < ushort.MinValue)
+            {
+                value = ushort.MaxValue - (value - ushort.MinValue);
+            }
+
+            // calculate half carry
+            // this is probably wrong
+
+            var highByte = (byte)(a >> 8);
+            var lowNibbles = highByte.LowNibble() - 1;
+            HalfCarryFlag = lowNibbles > 0;
+
+            OperationFlag = true;
+            ZeroFlag = value == 0;
+
+            return (byte)value;
+        }
+
         byte AndBytes(byte a, byte b)
         {
             var value = a & b;
@@ -285,6 +343,24 @@ namespace GameboyEmulator
             while (value > ushort.MaxValue)
             {
                 CarryFlag = true;
+                value = (value - ushort.MaxValue) + ushort.MinValue;
+            }
+
+            // calculate half carry
+            // this is almost definitely wrong
+            HalfCarryFlag = value > 2048;
+
+            OperationFlag = false;
+            ZeroFlag = value == 0;
+
+            return (ushort)value;
+        }
+
+        ushort IncWord(ushort a)
+        {
+            var value = a + 1;
+            while (value > ushort.MaxValue)
+            {
                 value = (value - ushort.MaxValue) + ushort.MinValue;
             }
 
@@ -1464,6 +1540,110 @@ namespace GameboyEmulator
         {
             var storedValue = ReadByte();
             CpBytes(RegA, storedValue);
+        }
+
+        #endregion
+
+        #region INC
+
+        [Op(0x3C, 4, "INC A")]
+        void INC_A()
+        {
+            RegA = IncByte(RegA);
+        }
+
+        [Op(0x04, 4, "INC B")]
+        void INC_B()
+        {
+            RegB = IncByte(RegB);
+        }
+
+        [Op(0x0C, 4, "INC C")]
+        void INC_C()
+        {
+            RegC = IncByte(RegC);
+        }
+
+        [Op(0x14, 4, "INC D")]
+        void INC_D()
+        {
+            RegD = IncByte(RegD);
+        }
+
+        [Op(0x1C, 4, "INC E")]
+        void INC_E()
+        {
+            RegE = IncByte(RegE);
+        }
+
+        [Op(0x24, 4, "INC H")]
+        void INC_H()
+        {
+            RegH = IncByte(RegH);
+        }
+
+        [Op(0x2C, 4, "INC L")]
+        void INC_L()
+        {
+            RegL = IncByte(RegL);
+        }
+
+        [Op(0x34, 12, "INC HL")]
+        void INC_HL()
+        {
+           HL = IncWord(HL);
+        }
+
+        #endregion
+
+        #region DEC
+
+        [Op(0x3D, 4, "DEC A")]
+        void DEC_A()
+        {
+            RegA = DecByte(RegA);
+        }
+
+        [Op(0x05, 4, "DEC B")]
+        void DEC_B()
+        {
+            RegB = DecByte(RegB);
+        }
+
+        [Op(0x0D, 4, "DEC C")]
+        void DEC_C()
+        {
+            RegC = DecByte(RegC);
+        }
+
+        [Op(0x15, 4, "DEC D")]
+        void DEC_D()
+        {
+            RegD = DecByte(RegD);
+        }
+
+        [Op(0x1D, 4, "DEC E")]
+        void DEC_E()
+        {
+            RegE = DecByte(RegE);
+        }
+
+        [Op(0x25, 4, "DEC H")]
+        void DEC_H()
+        {
+            RegH = DecByte(RegH);
+        }
+
+        [Op(0x2D, 4, "DEC L")]
+        void DEC_L()
+        {
+            RegL = DecByte(RegL);
+        }
+
+        [Op(0x35, 4, "DEC HL")]
+        void DEC_HL()
+        {
+            HL = DecWord(HL);
         }
 
         #endregion
