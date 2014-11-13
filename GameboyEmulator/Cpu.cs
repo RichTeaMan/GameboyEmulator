@@ -1187,6 +1187,144 @@ namespace GameboyEmulator
 
         #endregion
 
+        #region AND
+
+        [Op(0xA7, 4, "AND A")]
+        void AND_A()
+        {
+            var value = RegA & RegA;
+            RegA = (byte)value;
+        }
+
+        [Op(0xA0, 4, "AND B")]
+        void AND_B()
+        {
+            var value = RegA & RegB;
+            RegA = (byte)value;
+        }
+
+        [Op(0xA1, 4, "AND C")]
+        void AND_C()
+        {
+            var value = RegA & RegC;
+            RegA = (byte)value;
+        }
+
+        [Op(0xA2, 4, "AND D")]
+        void AND_D()
+        {
+            var value = RegA & RegD;
+            RegA = (byte)value;
+        }
+
+        [Op(0xA3, 4, "AND E")]
+        void AND_E()
+        {
+            var value = RegA & RegE;
+            RegA = (byte)value;
+        }
+
+        [Op(0xA4, 4, "AND H")]
+        void AND_H()
+        {
+            var value = RegA & RegH;
+            RegA = (byte)value;
+        }
+
+        [Op(0xA5, 4, "AND L")]
+        void AND_L()
+        {
+            var value = RegA & RegL;
+            RegA = (byte)value;
+        }
+
+        [Op(0xA6, 8, "AND (HL)")]
+        void AND_HL()
+        {
+            var storedValue = Mmu.ReadByte(HL);
+            var value = RegA & storedValue;
+            RegA = (byte)value;
+        }
+
+        [Op(0xE6, 8, "AND n")]
+        void AND_n()
+        {
+            var storedValue = ReadByte();
+            var value = RegA & storedValue;
+            RegA = (byte)value;
+        }
+
+        #endregion
+
+        #region OR
+
+        [Op(0xB7, 4, "OR A")]
+        void OR_A()
+        {
+            var value = RegA | RegA;
+            RegA = (byte)value;
+        }
+
+        [Op(0xB0, 4, "OR B")]
+        void OR_B()
+        {
+            var value = RegA | RegB;
+            RegA = (byte)value;
+        }
+
+        [Op(0xB1, 4, "OR C")]
+        void OR_C()
+        {
+            var value = RegA | RegC;
+            RegA = (byte)value;
+        }
+
+        [Op(0xB2, 4, "OR D")]
+        void OR_D()
+        {
+            var value = RegA | RegD;
+            RegA = (byte)value;
+        }
+
+        [Op(0xB3, 4, "OR E")]
+        void OR_E()
+        {
+            var value = RegA | RegE;
+            RegA = (byte)value;
+        }
+
+        [Op(0xB4, 4, "OR H")]
+        void OR_H()
+        {
+            var value = RegA | RegH;
+            RegA = (byte)value;
+        }
+
+        [Op(0xB5, 4, "OR L")]
+        void OR_L()
+        {
+            var value = RegA | RegL;
+            RegA = (byte)value;
+        }
+
+        [Op(0xB6, 48, "OR (HL)")]
+        void OR_HL()
+        {
+            var storedValue = Mmu.ReadByte(HL);
+            var value = RegA | storedValue;
+            RegA = (byte)value;
+        }
+
+        [Op(0xF6, 8, "OR n")]
+        void OR_n()
+        {
+            var storedValue = ReadByte();
+            var value = RegA | storedValue;
+            RegA = (byte)value;
+        }
+
+        #endregion
+
         #endregion
 
     }
