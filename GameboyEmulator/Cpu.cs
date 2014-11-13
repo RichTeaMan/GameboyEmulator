@@ -1177,6 +1177,30 @@ namespace GameboyEmulator
             RegA = AddBytes(RegA, value);
         }
 
+        [Op(0x09, 8, "ADD HL BC")]
+        void ADD_HLBC()
+        {
+            HL = AddWords(HL, BC);
+        }
+
+        [Op(0x19, 8, "ADD HL DE")]
+        void ADD_HLDE()
+        {
+            HL = AddWords(HL, DE);
+        }
+
+        [Op(0x29, 8, "ADD HL HL")]
+        void ADD_HLHL()
+        {
+            HL = AddWords(HL, HL);
+        }
+
+        [Op(0x39, 8, "ADD HL SP")]
+        void ADD_HLSP()
+        {
+            HL = AddWords(HL, SP);
+        }
+
         #endregion
 
         #region SUB
