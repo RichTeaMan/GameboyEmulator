@@ -197,12 +197,37 @@ namespace GameboyEmulator
             while (value > byte.MaxValue)
             {
                 CarryFlag = true;
-                value -= byte.MaxValue;
+                value = (value - byte.MaxValue) + byte.MinValue;
             }
 
             // calculate half carry
             var lowNibbles = a.LowNibble() + b.LowNibble();
             HalfCarryFlag = lowNibbles > 15;
+
+            OperationFlag = false;
+            ZeroFlag = value == 0;
+
+            return (byte)value;
+        }
+
+        byte SubBytes(byte a, byte b)
+        {
+            var value = a - b;
+            CarryFlag = false;
+            while (value < byte.MinValue)
+            {
+                CarryFlag = true;
+                value = byte.MaxValue - (value - byte.MinValue);
+            }
+
+            // calculate half carry
+            // this is probably wrong
+            var lowNibbles = a.LowNibble() - b.LowNibble();
+            HalfCarryFlag = lowNibbles > 0;
+
+            OperationFlag = true;
+            ZeroFlag = value == 0;
+
             return (byte)value;
         }
 
@@ -219,12 +244,16 @@ namespace GameboyEmulator
             while (value > ushort.MaxValue)
             {
                 CarryFlag = true;
-                value -= ushort.MaxValue;
+                value = (value - ushort.MaxValue) + ushort.MinValue;
             }
 
             // calculate half carry
             // this is almost definitely wrong
             HalfCarryFlag = value > 2048;
+
+            OperationFlag = false;
+            ZeroFlag = value == 0;
+
             return (ushort)value;
         }
 
@@ -895,6 +924,265 @@ namespace GameboyEmulator
             var value = Mmu.ReadWord(SP);
             HL = value;
             SP += 2;
+        }
+
+        #endregion
+
+        #region ADD
+
+        [Op(0x87, 4, "ADD A A")]
+        void ADD_AA()
+        {
+            RegA = AddBytes(RegA, RegA);
+        }
+
+        [Op(0x80, 4, "ADD A B")]
+        void ADD_AB()
+        {
+            RegA = AddBytes(RegA, RegB);
+        }
+
+        [Op(0x81, 4, "ADD A D")]
+        void ADD_AC()
+        {
+            RegA = AddBytes(RegA, RegC);
+        }
+
+        [Op(0x82, 4, "ADD A D")]
+        void ADD_AD()
+        {
+            RegA = AddBytes(RegA, RegD);
+        }
+
+        [Op(0x83, 4, "ADD A E")]
+        void ADD_AE()
+        {
+            RegA = AddBytes(RegA, RegE);
+        }
+
+        [Op(0x84, 4, "ADD A H")]
+        void ADD_AH()
+        {
+            RegA = AddBytes(RegA, RegH);
+        }
+
+        [Op(0x85, 4, "ADD A L")]
+        void ADD_AL()
+        {
+            RegA = AddBytes(RegA, RegL);
+        }
+
+        [Op(0x86, 8, "ADD A (HL)")]
+        void ADD_HL()
+        {
+            var value = Mmu.ReadByte(HL);
+            RegA = AddBytes(RegA, value);
+        }
+
+        [Op(0xC6, 8, "ADD A x")]
+        void ADD_n()
+        {
+            var value = ReadByte();
+            RegA = AddBytes(RegA, value);
+        }
+
+        [Op(0x8F, 4, "ADC A A")]
+        void ADC_AA()
+        {
+            var carryValue = (byte)(CarryFlag ? 1 : 0);
+            var value = AddBytes(RegA, carryValue);
+            RegA = AddBytes(RegA, value);
+        }
+
+        [Op(0x88, 4, "ADC A B")]
+        void ADC_AB()
+        {
+            var carryValue = (byte)(CarryFlag ? 1 : 0);
+            var value = AddBytes(RegB, carryValue);
+            RegA = AddBytes(RegA, value);
+        }
+
+        [Op(0x89, 4, "ADC A C")]
+        void ADC_AC()
+        {
+            var carryValue = (byte)(CarryFlag ? 1 : 0);
+            var value = AddBytes(RegC, carryValue);
+            RegA = AddBytes(RegA, value);
+        }
+
+        [Op(0x8A, 4, "ADC A D")]
+        void ADC_AD()
+        {
+            var carryValue = (byte)(CarryFlag ? 1 : 0);
+            var value = AddBytes(RegD, carryValue);
+            RegA = AddBytes(RegA, value);
+        }
+
+        [Op(0x8B, 4, "ADC A E")]
+        void ADC_AE()
+        {
+            var carryValue = (byte)(CarryFlag ? 1 : 0);
+            var value = AddBytes(RegE, carryValue);
+            RegA = AddBytes(RegA, value);
+        }
+
+        [Op(0x8C, 4, "ADC A H")]
+        void ADC_AH()
+        {
+            var carryValue = (byte)(CarryFlag ? 1 : 0);
+            var value = AddBytes(RegH, carryValue);
+            RegA = AddBytes(RegA, value);
+        }
+
+        [Op(0x8D, 4, "ADC A L")]
+        void ADC_AL()
+        {
+            var carryValue = (byte)(CarryFlag ? 1 : 0);
+            var value = AddBytes(RegL, carryValue);
+            RegA = AddBytes(RegA, value);
+        }
+
+        [Op(0x8E, 8, "ADC A (HL)")]
+        void ADC_AHL()
+        {
+            var carryValue = (byte)(CarryFlag ? 1 : 0);
+            var storedValue = Mmu.ReadByte(HL);
+            var value = AddBytes(storedValue, carryValue);
+            RegA = AddBytes(RegA, value);
+        }
+
+        [Op(0xCE, 8, "ADC A #")]
+        void ADC_An()
+        {
+            var carryValue = (byte)(CarryFlag ? 1 : 0);
+            var storedValue = ReadByte();
+            var value = AddBytes(storedValue, carryValue);
+            RegA = AddBytes(RegA, value);
+        }
+
+        #endregion
+
+        #region SUB
+
+        [Op(0x97, 4, "SUB A")]
+        void SUB_A()
+        {
+            RegA = SubBytes(RegA, RegA);
+        }
+
+        [Op(0x90, 4, "SUB B")]
+        void SUB_B()
+        {
+            RegA = SubBytes(RegA, RegB);
+        }
+
+        [Op(0x91, 4, "SUB C")]
+        void SUB_C()
+        {
+            RegA = SubBytes(RegA, RegC);
+        }
+
+        [Op(0x92, 4, "SUB D")]
+        void SUB_D()
+        {
+            RegA = SubBytes(RegA, RegD);
+        }
+
+        [Op(0x93, 4, "SUB E")]
+        void SUB_E()
+        {
+            RegA = SubBytes(RegA, RegE);
+        }
+
+        [Op(0x94, 4, "SUB H")]
+        void SUB_H()
+        {
+            RegA = SubBytes(RegA, RegH);
+        }
+
+        [Op(0x95, 4, "SUB L")]
+        void SUB_L()
+        {
+            RegA = SubBytes(RegA, RegL);
+        }
+
+        [Op(0x96, 8, "SUB (HL)")]
+        void SUB_HL()
+        {
+            var value = Mmu.ReadByte(HL);
+            RegA = SubBytes(RegA, value);
+        }
+
+        [Op(0xD6, 8, "SUB n")]
+        void SUB_n()
+        {
+            var value = ReadByte();
+            RegA = SubBytes(RegA, value);
+        }
+
+        [Op(0x9F, 4, "SBC A")]
+        void SBC_A()
+        {
+            var carryValue = (byte)(CarryFlag ? 1 : 0);
+            var value = AddBytes(RegA, carryValue);
+            RegA = SubBytes(RegA, value);
+        }
+
+        [Op(0x98, 4, "SBC B")]
+        void SBC_B()
+        {
+            var carryValue = (byte)(CarryFlag ? 1 : 0);
+            var value = AddBytes(RegB, carryValue);
+            RegA = SubBytes(RegA, value);
+        }
+
+        [Op(0x99, 4, "SBC C")]
+        void SBC_C()
+        {
+            var carryValue = (byte)(CarryFlag ? 1 : 0);
+            var value = AddBytes(RegC, carryValue);
+            RegA = SubBytes(RegA, value);
+        }
+
+        [Op(0x9A, 4, "SBC D")]
+        void SBC_D()
+        {
+            var carryValue = (byte)(CarryFlag ? 1 : 0);
+            var value = AddBytes(RegD, carryValue);
+            RegA = SubBytes(RegA, value);
+        }
+
+        [Op(0x9B, 4, "SBC E")]
+        void SBC_E()
+        {
+            var carryValue = (byte)(CarryFlag ? 1 : 0);
+            var value = AddBytes(RegE, carryValue);
+            RegA = SubBytes(RegA, value);
+        }
+
+        [Op(0x9C, 4, "SBC H")]
+        void SBC_H()
+        {
+            var carryValue = (byte)(CarryFlag ? 1 : 0);
+            var value = AddBytes(RegH, carryValue);
+            RegA = SubBytes(RegA, value);
+        }
+
+        [Op(0x9D, 4, "SBC L")]
+        void SBC_L()
+        {
+            var carryValue = (byte)(CarryFlag ? 1 : 0);
+            var value = AddBytes(RegL, carryValue);
+            RegA = SubBytes(RegA, value);
+        }
+
+        [Op(0x9E, 8, "SBC HL")]
+        void SBC_HL()
+        {
+            var carryValue = (byte)(CarryFlag ? 1 : 0);
+            var storedValue = ReadByte();
+            var value = AddBytes(storedValue, carryValue);
+            RegA = SubBytes(RegA, value);
         }
 
         #endregion
