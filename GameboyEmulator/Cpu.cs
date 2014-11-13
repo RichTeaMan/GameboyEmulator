@@ -234,6 +234,18 @@ namespace GameboyEmulator
             return (byte)value;
         }
 
+        byte XorBytes(byte a, byte b)
+        {
+            var value = a ^ b;
+
+            ZeroFlag = value == 0;
+            OperationFlag = false;
+            HalfCarryFlag = false;
+            CarryFlag = false;
+
+            return (byte)value;
+        }
+
         byte SubBytes(byte a, byte b)
         {
             var value = a - b;
@@ -1330,7 +1342,67 @@ namespace GameboyEmulator
         }
 
         #endregion
-        
+
+        #region XOR
+
+        [Op(0xAF, 4, "XOR A")]
+        void XOR_A()
+        {
+            RegA = XorBytes(RegA, RegA);
+        }
+
+        [Op(0xA8, 4, "XOR B")]
+        void XOR_B()
+        {
+            RegA = XorBytes(RegA, RegB);
+        }
+
+        [Op(0xA9, 4, "XOR C")]
+        void XOR_C()
+        {
+            RegA = XorBytes(RegA, RegC);
+        }
+
+        [Op(0xAA, 4, "XOR D")]
+        void XOR_D()
+        {
+            RegA = XorBytes(RegA, RegD);
+        }
+
+        [Op(0xAB, 4, "XOR E")]
+        void XOR_E()
+        {
+            RegA = XorBytes(RegA, RegE);
+        }
+
+        [Op(0xAC, 4, "XOR H")]
+        void XOR_H()
+        {
+            RegA = XorBytes(RegA, RegH);
+        }
+
+        [Op(0xAD, 4, "XOR L")]
+        void XOR_L()
+        {
+            RegA = XorBytes(RegA, RegL);
+        }
+
+        [Op(0xAE, 48, "XOR (HL)")]
+        void XOR_HL()
+        {
+            var storedValue = Mmu.ReadByte(HL);
+            RegA = XorBytes(RegA, storedValue);
+        }
+
+        [Op(0xEE, 8, "XOR n")]
+        void XOR_n()
+        {
+            var storedValue = ReadByte();
+            RegA = XorBytes(RegA, storedValue);
+        }
+
+        #endregion
+
         #endregion
 
     }
