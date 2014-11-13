@@ -1621,10 +1621,35 @@ namespace GameboyEmulator
             RegL = IncByte(RegL);
         }
 
-        [Op(0x34, 12, "INC HL")]
+        [Op(0x34, 12, "INC (HL)")]
+        void INC_bHLb()
+        {
+            var value = ReadByte();
+            HL = IncByte(value);
+        }
+
+        [Op(0x03, 8, "INC BC")]
+        void INC_BC()
+        {
+            BC = IncWord(BC);
+        }
+
+        [Op(0x13, 8, "INC DE")]
+        void INC_DE()
+        {
+            DE = IncWord(DE);
+        }
+
+        [Op(0x23, 8, "INC HL")]
         void INC_HL()
         {
            HL = IncWord(HL);
+        }
+
+        [Op(0x33, 8, "INC SP")]
+        void INC_SP()
+        {
+            SP = IncWord(SP);
         }
 
         #endregion
@@ -1673,10 +1698,35 @@ namespace GameboyEmulator
             RegL = DecByte(RegL);
         }
 
-        [Op(0x35, 4, "DEC HL")]
+        [Op(0x35, 12, "DEC (HL)")]
+        void DEC_bHLb()
+        {
+            var value = ReadByte();
+            HL = DecWord(value);
+        }
+
+        [Op(0x0B, 8, "DEC BC")]
+        void DEC_BC()
+        {
+            BC = DecWord(BC);
+        }
+
+        [Op(0x1B, 8, "DEC DE")]
+        void DEC_DE()
+        {
+            DE = DecWord(DE);
+        }
+
+        [Op(0x2B, 8, "DEC HL")]
         void DEC_HL()
         {
             HL = DecWord(HL);
+        }
+
+        [Op(0x3B, 8, "DEC SP")]
+        void DEC_SP()
+        {
+            SP = DecWord(SP);
         }
 
         #endregion
