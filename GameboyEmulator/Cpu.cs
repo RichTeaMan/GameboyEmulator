@@ -92,12 +92,14 @@ namespace GameboyEmulator
 
         public bool Stopped { get; protected set; }
         public bool Halted { get; protected set; }
+        public bool DisableInterupt { get; protected set; }
+        public bool EnableInterupt { get; protected set; }
 
         /// <summary>
         /// Gets the Program Counter.
         /// </summary>
         /// <returns></returns>
-            public ushort PC { get; protected set; }
+        public ushort PC { get; protected set; }
         /// <summary>
         /// Gets the Stack Pointer.
         /// </summary>
@@ -1868,6 +1870,18 @@ namespace GameboyEmulator
         {
             // pause execution and screen refresh until a button is pressed.
             Stopped = true;
+        }
+
+        [Op(0xF3, 4, "DI")]
+        void DI()
+        {
+            DisableInterupt = true;
+        }
+
+        [Op(0xFB, 4, "EI")]
+        void EI()
+        {
+            DisableInterupt = true;
         }
 
         #endregion
