@@ -192,12 +192,12 @@ namespace GameboyEmulator
         /// <returns></returns>
         byte AddBytes(byte a, byte b)
         {
-            var value = a + b;
+            var value = (sbyte)a + (sbyte)b;
             CarryFlag = false;
             while (value > byte.MaxValue)
             {
                 CarryFlag = true;
-                value = (value - byte.MaxValue) + byte.MinValue;
+                value = (value - sbyte.MaxValue) + sbyte.MinValue;
             }
 
             // calculate half carry
@@ -212,10 +212,10 @@ namespace GameboyEmulator
 
         byte IncByte(byte a)
         {
-            var value = a + 1;
+            var value = (sbyte)a + 1;
             while (value > byte.MaxValue)
             {
-                value = (value - byte.MaxValue) + byte.MinValue;
+                value = (value - sbyte.MaxValue) + sbyte.MinValue;
             }
 
             // calculate half carry
@@ -230,10 +230,10 @@ namespace GameboyEmulator
 
         byte DecByte(byte a)
         {
-            var value = a - 1;
-            while (value < byte.MinValue)
+            var value = (sbyte)a - 1;
+            while (value < sbyte.MinValue)
             {
-                value = byte.MaxValue - (value - byte.MinValue);
+                value = sbyte.MaxValue - (value - sbyte.MinValue);
             }
 
             // calculate half carry
@@ -306,12 +306,12 @@ namespace GameboyEmulator
 
         byte SubBytes(byte a, byte b)
         {
-            var value = a - b;
+            var value = (sbyte)a - (sbyte)b;
             CarryFlag = false;
-            while (value < byte.MinValue)
+            while (value < sbyte.MinValue)
             {
                 CarryFlag = true;
-                value = byte.MaxValue - (value - byte.MinValue);
+                value = sbyte.MaxValue - (value - sbyte.MinValue);
             }
 
             // calculate half carry

@@ -8,18 +8,18 @@ namespace GameboyEmulator
 {
     public static class Utility
     {
-        public static byte LowNibble(this byte b)
+        public static Nibble LowNibble(this byte b)
         {
             var mask = 0x0F;
             var result = mask & b;
-            return (byte)result;
+            return new Nibble(result);
         }
 
-        public static byte HighNibble(this byte b)
+        public static Nibble HighNibble(this byte b)
         {
             var mask = 0xF0;
-            var result = mask & b;
-            return (byte)result;
+            var result = (mask & b) >> 4;
+            return new Nibble(result);
         }
 
         public static bool IsBitSet(this byte b, int pos)
