@@ -22,6 +22,14 @@ namespace GameboyEmulator
             return new Nibble(result);
         }
 
+        public static byte SwapNibbles(this byte b)
+        {
+            var h = b.HighNibble();
+            var l = b.LowNibble();
+            var result = Nibble.GetByteFromNibbles(l, h);
+            return result;
+        }
+
         public static bool IsBitSet(this byte b, int pos)
         {
             return (b & (1 << pos)) != 0;

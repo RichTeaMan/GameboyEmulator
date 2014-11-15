@@ -374,6 +374,21 @@ namespace GameboyEmulator
             return (ushort)value;
         }
 
+        /// <summary>
+        /// Swaps the high and low nibbles of the byte.
+        /// </summary>
+        /// <param name="a"></param>
+        /// <returns></returns>
+        byte Swap(byte a)
+        {
+            var result = a.SwapNibbles();
+            ZeroFlag = result == 0;
+            OperationFlag = false;
+            HalfCarryFlag = false;
+            CarryFlag = false;
+            return result;
+        }
+
         #endregion
 
         #region Ops
@@ -1727,6 +1742,61 @@ namespace GameboyEmulator
         void DEC_SP()
         {
             SP = DecWord(SP);
+        }
+
+        #endregion
+
+        #region SWAP
+
+        [CbOp(0x37, 8, "Swap A")]
+        void SWAP_A()
+        {
+            RegA = Swap(RegA);
+        }
+
+        [CbOp(0x30, 8, "Swap B")]
+        void SWAP_B()
+        {
+            RegB = Swap(RegB);
+        }
+
+        [CbOp(0x31, 8, "Swap C")]
+        void SWAP_C()
+        {
+            RegC = Swap(RegC);
+        }
+
+        [CbOp(0x32, 8, "Swap D")]
+        void SWAP_D()
+        {
+            RegD = Swap(RegD);
+        }
+
+        [CbOp(0x33, 8, "Swap E")]
+        void SWAP_E()
+        {
+            RegE = Swap(RegE);
+        }
+
+        [CbOp(0x34, 8, "Swap H")]
+        void SWAP_H()
+        {
+            RegH = Swap(RegH);
+        }
+
+        [CbOp(0x35, 8, "Swap L")]
+        void SWAP_L()
+        {
+            RegL = Swap(RegL);
+        }
+
+        // This commands appears to do too much for 16 cycles. Check that this is as specified.
+        [CbOp(0x36, 16, "Swap (HL)")]
+        void SWAP_HL()
+        {
+            var value = Mmu.ReadByte(HL);
+            var swappedValue = Swap(value);
+            Mmu.WriteByte(HL, swappedValue);
         }
 
         #endregion
