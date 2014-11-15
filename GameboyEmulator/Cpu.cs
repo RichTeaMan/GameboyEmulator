@@ -90,6 +90,9 @@ namespace GameboyEmulator
             }
         }
 
+        public bool Stopped { get; protected set; }
+        public bool Halted { get; protected set; }
+
         /// <summary>
         /// Gets the Program Counter.
         /// </summary>
@@ -1797,6 +1800,74 @@ namespace GameboyEmulator
             var value = Mmu.ReadByte(HL);
             var swappedValue = Swap(value);
             Mmu.WriteByte(HL, swappedValue);
+        }
+
+        #endregion
+
+        #region DAA
+
+        // This is proably wrong. Greater knowledge of BCD is needed.
+        [Op(0x27, 4, "DAA")]
+        void DAA()
+        {
+            RegA = AddBytes(RegA, 0x06);
+            HalfCarryFlag = false;
+        }
+
+        #endregion
+
+        #region CPL
+
+        [Op(0x2F, 4, "CPL")]
+        void CPL()
+        {
+            RegA = (byte)~RegA;
+            OperationFlag = true;
+            HalfCarryFlag = true;
+        }
+
+        #endregion
+
+        #region CCF-SCF
+
+        [Op(0x3F, 4, "CCF")]
+        void CCF()
+        {
+            CarryFlag = !CarryFlag;
+            OperationFlag = false;
+            HalfCarryFlag = false;
+        }
+
+        [Op(0x37, 4, "SCF")]
+        void SCF()
+        {
+            CarryFlag = true;
+            OperationFlag = false;
+            HalfCarryFlag = false;
+        }
+
+        #endregion
+
+        #region POWER
+
+        [Op(0x00, 4, "NOP")]
+        void NOP()
+        {
+            // no operation
+        }
+
+        [Op(0x76, 4, "HALT")]
+        void HALT()
+        {
+            // pause execution until an interupt occurs.
+            Halted = true;
+        }
+
+        [Op(0x10, 4, "STOP")]
+        void STOP()
+        {
+            // pause execution and screen refresh until a button is pressed.
+            Stopped = true;
         }
 
         #endregion
