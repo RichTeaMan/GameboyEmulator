@@ -157,6 +157,32 @@ namespace GameboyEmulator
 
         #region Methods
 
+        void PushByte(byte value)
+        {
+            SP--;
+            Mmu.WriteByte(SP, value);
+        }
+
+        void PushWord(ushort value)
+        {
+            SP -= 2;
+            Mmu.WriteWord(SP, value);
+        }
+
+        byte PopByte()
+        {
+            var value = Mmu.ReadByte(SP);
+            SP++;
+            return value;
+        }
+
+        ushort PopWord()
+        {
+            var value = Mmu.ReadWord(SP);
+            SP += 2;
+            return value;
+        }
+
         void IncPc()
         {
             PC++;
@@ -2674,6 +2700,109 @@ namespace GameboyEmulator
                 CALL();
             else
                 PC += 2;
+        }
+
+        #endregion
+
+        #region RESTART
+
+        [Op(0xC7, 32, "RST 00")]
+        void RST_00()
+        {
+            PushWord(PC);
+            PC = 0x00;
+        }
+
+        [Op(0xCF, 32, "RST 08")]
+        void RST_08()
+        {
+            PushWord(PC);
+            PC = 0x08;
+        }
+
+        [Op(0xD7, 32, "RST 10")]
+        void RST_10()
+        {
+            PushWord(PC);
+            PC = 0x10;
+        }
+
+        [Op(0xDF, 32, "RST 18")]
+        void RST_18()
+        {
+            PushWord(PC);
+            PC = 0x18;
+        }
+
+        [Op(0xE7, 32, "RST 20")]
+        void RST_20()
+        {
+            PushWord(PC);
+            PC = 0x20;
+        }
+
+        [Op(0xEF, 32, "RST 28")]
+        void RST_28()
+        {
+            PushWord(PC);
+            PC = 0x28;
+        }
+
+        [Op(0xF7, 32, "RST 30")]
+        void RST_30()
+        {
+            PushWord(PC);
+            PC = 0x30;
+        }
+
+        [Op(0xFF, 32, "RST 38")]
+        void RST_38()
+        {
+            PushWord(PC);
+            PC = 0x38;
+        }
+
+        [Op(0xC9, 8, "RET")]
+        void RET()
+        {
+            var address = PopWord();
+            PC = address;
+        }
+
+        [Op(0xC0, 8, "RET NZ")]
+        void RET_NZ()
+        {
+            if (!ZeroFlag)
+                RET();
+        }
+
+        [Op(0xC8, 8, "RET Z")]
+        void RET_Z()
+        {
+            if (ZeroFlag)
+                RET();
+        }
+
+        [Op(0xD0, 8, "RET NC")]
+        void RET_NC()
+        {
+            if (!CarryFlag)
+                RET();
+        }
+
+        [Op(0xD8, 8, "RET C")]
+        void RET_C()
+        {
+            if (CarryFlag)
+                RET();
+        }
+
+        [Op(0xD9, 8, "RETI")]
+        void RETI()
+        {
+            var address = PopWord();
+            PC = address;
+            EnableInterupt = true;
         }
 
         #endregion
