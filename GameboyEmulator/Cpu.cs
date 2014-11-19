@@ -152,7 +152,7 @@ namespace GameboyEmulator
         public Cpu()
         {
             PC = 0;
-            SP = 0;
+            SP = 0xFFFE;
         }
 
         #region Methods
