@@ -105,7 +105,7 @@ namespace GameboyEmulator
         /// </summary>
         /// <returns></returns>
         public ushort SP { get; protected set; }
-        
+
         /// <summary>
         /// Gets or sets the Zero flag (0x80). True if the last operation produced a result of 0.
         /// </summary>
@@ -147,8 +147,8 @@ namespace GameboyEmulator
             set { RegF.BitSet(4, value); }
         }
 
-        public Mmu Mmu { get; set; }   
-    
+        public Mmu Mmu { get; set; }
+
         public Cpu()
         {
             PC = 0;
@@ -168,7 +168,7 @@ namespace GameboyEmulator
             IncPc();
             return b;
         }
-        
+
         byte PeekByte()
         {
             var b = Mmu.ReadByte(PC);
@@ -474,6 +474,34 @@ namespace GameboyEmulator
             return result;
         }
 
+        private void TestBit(byte bit, byte value)
+        {
+            if (bit > 7)
+                throw new Exception(string.Format("Invalid value for bit. Value: {0}.", bit));
+
+            OperationFlag = false;
+            HalfCarryFlag = true;
+            ZeroFlag = !value.IsBitSet(bit);
+        }
+
+        private byte SetBit(byte bit, byte value)
+        {
+            if (bit > 7)
+                throw new Exception(string.Format("Invalid value for bit. Value: {0}.", bit));
+
+            var result = value.BitSet(bit);
+            return result;
+        }
+
+        private byte ResetBit(byte bit, byte value)
+        {
+            if (bit > 7)
+                throw new Exception(string.Format("Invalid value for bit. Value: {0}.", bit));
+
+            var result = value.BitSet(bit, false);
+            return result;
+        }
+
         #endregion
 
         #region Ops
@@ -656,48 +684,48 @@ namespace GameboyEmulator
             var value = Mmu.ReadByte(HL);
             RegC = value;
         }
-        
+
         [Op(0x50, 4, "LD D B")]
         void LD_DB()
         {
-            RegD =  RegB;
+            RegD = RegB;
         }
 
         [Op(0x51, 4, "LD D C")]
         void LD_DC()
         {
-            RegD =  RegC;
+            RegD = RegC;
         }
 
         [Op(0x52, 4, "LD D D")]
         void LD_DD()
         {
-            RegD =  RegD;
+            RegD = RegD;
         }
 
         [Op(0x53, 4, "LD D E")]
         void LD_DE()
         {
-            RegD =  RegE;
+            RegD = RegE;
         }
 
         [Op(0x54, 4, "LD D H")]
         void LD_DH()
         {
-            RegD =  RegH;
+            RegD = RegH;
         }
 
         [Op(0x55, 4, "LD D L")]
         void LD_DL()
         {
-            RegD =  RegL;
+            RegD = RegL;
         }
 
         [Op(0x56, 8, "LD D HL")]
         void LD_DHL()
         {
             var value = Mmu.ReadByte(HL);
-            RegD =  value;
+            RegD = value;
         }
 
         [Op(0x58, 4, "LD E B")]
@@ -1064,7 +1092,7 @@ namespace GameboyEmulator
 
             ZeroFlag = false;
             OperationFlag = false;
-            
+
         }
 
         [Op(0x08, 20, "LD nn SP")]
@@ -1743,7 +1771,7 @@ namespace GameboyEmulator
         [Op(0x23, 8, "INC HL")]
         void INC_HL()
         {
-           HL = IncWord(HL);
+            HL = IncWord(HL);
         }
 
         [Op(0x33, 8, "INC SP")]
@@ -1979,7 +2007,7 @@ namespace GameboyEmulator
         {
             RL_A();
         }
-        
+
         [Op(0x0F, 4, "RCRA")]
         void RCRA()
         {
@@ -2340,6 +2368,182 @@ namespace GameboyEmulator
             var value = Mmu.ReadByte(HL);
             var result = ShiftRight(value);
             Mmu.WriteByte(HL, result);
+        }
+
+
+        #endregion
+
+        #region BIT OPS
+
+        [CbOp(0x47, 8, "BIT {0} A")]
+        void BIT_bA()
+        {
+            var bit = ReadByte();
+            TestBit(bit, RegA);
+        }
+
+        [CbOp(0x40, 8, "BIT {0} B")]
+        void BIT_bB()
+        {
+            var bit = ReadByte();
+            TestBit(bit, RegB);
+        }
+
+        [CbOp(0x41, 8, "BIT {0} C")]
+        void BIT_bC()
+        {
+            var bit = ReadByte();
+            TestBit(bit, RegC);
+        }
+
+        [CbOp(0x42, 8, "BIT {0} D")]
+        void BIT_bD()
+        {
+            var bit = ReadByte();
+            TestBit(bit, RegD);
+        }
+
+        [CbOp(0x43, 8, "BIT {0} E")]
+        void BIT_bE()
+        {
+            var bit = ReadByte();
+            TestBit(bit, RegE);
+        }
+
+        [CbOp(0x44, 8, "BIT {0} H")]
+        void BIT_bH()
+        {
+            var bit = ReadByte();
+            TestBit(bit, RegH);
+        }
+
+        [CbOp(0x45, 8, "BIT {0} L")]
+        void BIT_bL()
+        {
+            var bit = ReadByte();
+            TestBit(bit, RegL);
+        }
+
+        [CbOp(0x46, 16, "BIT {0} (HL)")]
+        void BIT_bHL()
+        {
+            var value = Mmu.ReadByte(HL);
+            var bit = ReadByte();
+            TestBit(bit, value);
+        }
+
+        [CbOp(0xC7, 8, "SET {0} A")]
+        void SET_bA()
+        {
+            var bit = ReadByte();
+            SetBit(bit, RegA);
+        }
+
+        [CbOp(0xC0, 8, "SET {0} B")]
+        void SET_bB()
+        {
+            var bit = ReadByte();
+            SetBit(bit, RegB);
+        }
+
+        [CbOp(0xC1, 8, "SET {0} C ")]
+        void SET_bC()
+        {
+            var bit = ReadByte();
+            SetBit(bit, RegC);
+        }
+
+        [CbOp(0xC2, 8, "SET {0} D")]
+        void SET_bD()
+        {
+            var bit = ReadByte();
+            SetBit(bit, RegD);
+        }
+
+        [CbOp(0xC3, 8, "SET {0} E")]
+        void SET_bE()
+        {
+            var bit = ReadByte();
+            SetBit(bit, RegE);
+        }
+
+        [CbOp(0xC4, 8, "SET {0} H")]
+        void SET_bH()
+        {
+            var bit = ReadByte();
+            SetBit(bit, RegH);
+        }
+
+        [CbOp(0xC5, 8, "SET {0} L")]
+        void SET_bL()
+        {
+            var bit = ReadByte();
+            SetBit(bit, RegL);
+        }
+
+        [CbOp(0xC6, 16, "SET {0} (HL)")]
+        void SET_bHL()
+        {
+            var bit = ReadByte();
+            var value = Mmu.ReadByte(HL);
+            SetBit(bit, value);
+        }
+
+        [CbOp(0x87, 8, "RES {0} A")]
+        void RES_bA()
+        {
+            var bit = ReadByte();
+            ResetBit(bit, RegA);
+        }
+
+        [CbOp(0x80, 8, "RES {0} B")]
+        void RES_bB()
+        {
+            var bit = ReadByte();
+            ResetBit(bit, RegB);
+        }
+
+        [CbOp(0x81, 8, "RES {0} C ")]
+        void RES_bC()
+        {
+            var bit = ReadByte();
+            ResetBit(bit, RegC);
+        }
+
+        [CbOp(0x82, 8, "RES {0} D")]
+        void RES_bD()
+        {
+            var bit = ReadByte();
+            ResetBit(bit, RegD);
+        }
+
+        [CbOp(0x83, 8, "RES {0} E")]
+        void RES_bE()
+        {
+            var bit = ReadByte();
+            ResetBit(bit, RegE);
+        }
+
+        [CbOp(0x84, 8, "RES {0} H")]
+        void RES_bH()
+        {
+            var bit = ReadByte();
+            ResetBit(bit, RegH);
+        }
+
+        [CbOp(0x85, 8, "RES {0} L")]
+        void RES_bL()
+        {
+            var bit = ReadByte();
+            ResetBit(bit, RegL);
+        }
+
+        [CbOp(0x86, 16, "RES {0} (HL)")]
+        void RES_bHL()
+        {
+            var bit = ReadByte();
+            var value = Mmu.ReadByte(HL);
+            ResetBit(bit, value);
         }
 
         #endregion
