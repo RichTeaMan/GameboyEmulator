@@ -2548,6 +2548,136 @@ namespace GameboyEmulator
 
         #endregion
 
+        #region JUMPS
+
+        [Op(0xC3, 12, "JP")]
+        void JP()
+        {
+            var value = ReadWord();
+            PC = value;
+        }
+
+        [Op(0xC2, 12, "JP NZ")]
+        void JP_NZ()
+        {
+            if (!ZeroFlag)
+                JP();
+        }
+
+        [Op(0xC2, 12, "JP Z")]
+        void JP_Z()
+        {
+            if (ZeroFlag)
+                JP();
+        }
+
+        [Op(0xD2, 12, "JP NC")]
+        void JP_NC()
+        {
+            if (!CarryFlag)
+                JP();
+        }
+
+        [Op(0xDA, 12, "JP C")]
+        void JP_C()
+        {
+            if (CarryFlag)
+                JP();
+        }
+
+        [Op(0xE9, 4, "JP (HL)")]
+        void JP_HL()
+        {
+            var address = Mmu.ReadWord(HL);
+            PC = address;
+        }
+
+        [Op(0x18, 8, "JR n")]
+        void JR_n()
+        {
+            var value = ReadByte();
+            PC += value;
+        }
+
+        [Op(0x20, 12, "JR NZ")]
+        void JR_NZ()
+        {
+            if (!ZeroFlag)
+                JR_n();
+        }
+
+        [Op(0x28, 12, "JR Z")]
+        void JR_Z()
+        {
+            if (ZeroFlag)
+                JR_n();
+        }
+
+        [Op(0x30, 12, "JR NC")]
+        void JR_NC()
+        {
+            if (!CarryFlag)
+                JR_n();
+        }
+
+        [Op(0x38, 12, "JR C")]
+        void JR_C()
+        {
+            if (CarryFlag)
+                JR_n();
+        }
+
+        #endregion
+
+        #region CALLS
+
+        [Op(0xCD, 12, "CALL")]
+        void CALL()
+        {
+            var address = ReadWord();
+            Mmu.WriteWord(SP, PC);
+            SP -= 2;
+            PC = address;
+        }
+
+        [Op(0xC4, 12, "CALL NZ")]
+        void CALL_NZ()
+        {
+            if (!ZeroFlag)
+                CALL();
+            else
+                PC += 2;
+        }
+
+        [Op(0xCC, 12, "CALL Z")]
+        void CALL_Z()
+        {
+            if (ZeroFlag)
+                CALL();
+            else
+                PC += 2;
+        }
+
+        [Op(0xD4, 12, "CALL NC")]
+        void CALL_NC()
+        {
+            if (!CarryFlag)
+                CALL();
+            else
+                PC += 2;
+        }
+
+        [Op(0xDC, 12, "CALL C")]
+        void CALL_C()
+        {
+            if (CarryFlag)
+                CALL();
+            else
+                PC += 2;
+        }
+
+        #endregion
+
         #endregion
 
     }
