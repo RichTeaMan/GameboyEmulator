@@ -440,6 +440,40 @@ namespace GameboyEmulator
             return result;
         }
 
+        private byte ShiftLeft(byte value)
+        {
+            CarryFlag = value.IsBitSet(7);
+            if (CarryFlag)
+            {
+                // unset bit 7 so the byte doesn't wrap around when it is casted
+                // back to a byte after the shift.
+                value.BitSet(7, false);
+            }
+            var result = (byte)(value << 1);
+            OperationFlag = false;
+            HalfCarryFlag = false;
+            ZeroFlag = result == 0;
+            return result;
+        }
+
+        private byte ShiftRight(byte value)
+        {
+            CarryFlag = value.IsBitSet(0);
+            var result = (byte)(value >> 1);
+            OperationFlag = false;
+            HalfCarryFlag = false;
+            ZeroFlag = result == 0;
+            return result;
+        }
+
+        private byte ShiftRightArithmetic(byte value)
+        {
+            var msb = value.IsBitSet(7);
+            var result = ShiftRight(value);
+            result = result.BitSet(7, msb);
+            return result;
+        }
+
         #endregion
 
         #region Ops
@@ -2151,6 +2185,160 @@ namespace GameboyEmulator
         void RR_HL()
         {
             var result = RotateRightThrough(Mmu.ReadByte(HL));
+            Mmu.WriteByte(HL, result);
+        }
+
+        #endregion
+
+        #region SHIFT
+
+        [CbOp(0x27, 8, "SLA A")]
+        void SLA_A()
+        {
+            RegA = ShiftLeft(RegA);
+        }
+
+        [CbOp(0x20, 8, "SLA B")]
+        void SLA_B()
+        {
+            RegB = ShiftLeft(RegB);
+        }
+
+        [CbOp(0x21, 8, "SLA C")]
+        void SLA_C()
+        {
+            RegC = ShiftLeft(RegC);
+        }
+
+        [CbOp(0x22, 8, "SLA D")]
+        void SLA_D()
+        {
+            RegD = ShiftLeft(RegD);
+        }
+
+        [CbOp(0x23, 8, "SLA E")]
+        void SLA_E()
+        {
+            RegE = ShiftLeft(RegE);
+        }
+
+        [CbOp(0x24, 8, "SLA H")]
+        void SLA_H()
+        {
+            RegH = ShiftLeft(RegH);
+        }
+
+        [CbOp(0x25, 8, "SLA L")]
+        void SLA_L()
+        {
+            RegL = ShiftLeft(RegL);
+        }
+
+        [CbOp(0x26, 16, "SLA (HL)")]
+        void SLA_HL()
+        {
+            var value = Mmu.ReadByte(HL);
+            var result = ShiftLeft(value);
+            Mmu.WriteByte(HL, result);
+        }
+
+        [CbOp(0x2F, 8, "SRA A")]
+        void SRA_A()
+        {
+            RegA = ShiftRightArithmetic(RegA);
+        }
+
+        [CbOp(0x28, 8, "SRA B")]
+        void SRA_B()
+        {
+            RegB = ShiftRightArithmetic(RegB);
+        }
+
+        [CbOp(0x29, 8, "SRA C")]
+        void SRA_C()
+        {
+            RegC = ShiftRightArithmetic(RegC);
+        }
+
+        [CbOp(0x2A, 8, "SRA D")]
+        void SRA_D()
+        {
+            RegD = ShiftRightArithmetic(RegD);
+        }
+
+        [CbOp(0x2B, 8, "SRA E")]
+        void SRA_E()
+        {
+            RegE = ShiftRightArithmetic(RegE);
+        }
+
+        [CbOp(0x2C, 8, "SRA H")]
+        void SRA_H()
+        {
+            RegH = ShiftRightArithmetic(RegH);
+        }
+
+        [CbOp(0x2D, 8, "SRA L")]
+        void SRA_L()
+        {
+            RegL = ShiftRightArithmetic(RegL);
+        }
+
+        [CbOp(0x2E, 16, "SRA (HL)")]
+        void SRA_HL()
+        {
+            var value = Mmu.ReadByte(HL);
+            var result = ShiftRightArithmetic(value);
+            Mmu.WriteByte(HL, result);
+        }
+
+        [CbOp(0x3F, 8, "SRL A")]
+        void SRL_A()
+        {
+            RegA = ShiftRight(RegA);
+        }
+
+        [CbOp(0x38, 8, "SRL B")]
+        void SRL_B()
+        {
+            RegB = ShiftRight(RegB);
+        }
+
+        [CbOp(0x39, 8, "SRL C")]
+        void SRL_C()
+        {
+            RegC = ShiftRight(RegC);
+        }
+
+        [CbOp(0x3A, 8, "SRL D")]
+        void SRL_D()
+        {
+            RegD = ShiftRight(RegD);
+        }
+
+        [CbOp(0x3B, 8, "SRL E")]
+        void SRL_E()
+        {
+            RegE = ShiftRight(RegE);
+        }
+
+        [CbOp(0x3C, 8, "SRL H")]
+        void SRL_H()
+        {
+            RegH = ShiftRight(RegH);
+        }
+
+        [CbOp(0x3D, 8, "SRL L")]
+        void SRL_L()
+        {
+            RegL = ShiftRight(RegL);
+        }
+
+        [CbOp(0x3E, 16, "SRL (HL)")]
+        void SRL_HL()
+        {
+            var value = Mmu.ReadByte(HL);
+            var result = ShiftRight(value);
             Mmu.WriteByte(HL, result);
         }
 
