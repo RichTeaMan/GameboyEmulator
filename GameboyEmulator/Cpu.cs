@@ -394,6 +394,52 @@ namespace GameboyEmulator
             return result;
         }
 
+        private byte RotateLeft(byte value)
+        {
+            CarryFlag = value.IsBitSet(7);
+            var result = (byte)(value << 1);
+            ZeroFlag = value == 0;
+            OperationFlag = false;
+            HalfCarryFlag = false;
+            return result;
+        }
+
+        private byte RotateLeftThrough(byte value)
+        {
+            var oldCarry = CarryFlag;
+            CarryFlag = value.IsBitSet(7);
+            var result = (byte)(value << 1);
+            if (oldCarry)
+                result = result.BitSet(7);
+            ZeroFlag = result == 0;
+            OperationFlag = false;
+            HalfCarryFlag = false;
+            return result;
+        }
+
+        private byte RotateRight(byte value)
+        {
+            CarryFlag = value.IsBitSet(0);
+            var result = (byte)(value >> 1);
+            ZeroFlag = result == 0;
+            OperationFlag = false;
+            HalfCarryFlag = false;
+            return result;
+        }
+
+        private byte RotateRightThrough(byte value)
+        {
+            var oldCarry = CarryFlag;
+            CarryFlag = value.IsBitSet(0);
+            var result = (byte)(value >> 1);
+            if (oldCarry)
+                result = result.BitSet(0);
+            ZeroFlag = result == 0;
+            OperationFlag = false;
+            HalfCarryFlag = false;
+            return result;
+        }
+
         #endregion
 
         #region Ops
@@ -1882,6 +1928,230 @@ namespace GameboyEmulator
         void EI()
         {
             DisableInterupt = true;
+        }
+
+        #endregion
+
+        #region ROTATE
+
+        [Op(0x07, 4, "RCLA")]
+        void RCLA()
+        {
+            RLC_A();
+        }
+
+        [Op(0x17, 4, "RLA")]
+        void RLA()
+        {
+            RL_A();
+        }
+        
+        [Op(0x0F, 4, "RCRA")]
+        void RCRA()
+        {
+            RRC_A();
+        }
+
+        [Op(0x1F, 4, "RRA")]
+        void RRA()
+        {
+            RR_A();
+        }
+
+        [CbOp(0x07, 8, "RLC A")]
+        void RLC_A()
+        {
+            RegA = RotateLeft(RegA);
+        }
+
+        [CbOp(0x00, 8, "RLC B")]
+        void RLC_B()
+        {
+            RegB = RotateLeft(RegB);
+        }
+
+        [CbOp(0x01, 8, "RLC C")]
+        void RLC_C()
+        {
+            RegC = RotateLeft(RegC);
+        }
+
+        [CbOp(0x02, 8, "RLC D")]
+        void RLC_D()
+        {
+            RegD = RotateLeft(RegD);
+        }
+
+        [CbOp(0x03, 8, "RLC E")]
+        void RLC_E()
+        {
+            RegE = RotateLeft(RegE);
+        }
+
+        [CbOp(0x04, 8, "RLC H")]
+        void RLC_H()
+        {
+            RegH = RotateLeft(RegH);
+        }
+
+        [CbOp(0x05, 8, "RLC L")]
+        void RLC_L()
+        {
+            RegL = RotateLeft(RegL);
+        }
+
+        [CbOp(0x06, 16, "RLC A")]
+        void RLC_HL()
+        {
+            var result = RotateLeft(Mmu.ReadByte(HL));
+            Mmu.WriteByte(HL, result);
+        }
+
+        [CbOp(0x17, 8, "RL A")]
+        void RL_A()
+        {
+            RegA = RotateLeftThrough(RegA);
+        }
+
+        [CbOp(0x10, 8, "RL B")]
+        void RL_B()
+        {
+            RegB = RotateLeftThrough(RegB);
+        }
+
+        [CbOp(0x11, 8, "RL C")]
+        void RL_C()
+        {
+            RegC = RotateLeftThrough(RegC);
+        }
+
+        [CbOp(0x12, 8, "RL D")]
+        void RL_D()
+        {
+            RegD = RotateLeftThrough(RegD);
+        }
+
+        [CbOp(0x13, 8, "RL E")]
+        void RL_E()
+        {
+            RegE = RotateLeftThrough(RegE);
+        }
+
+        [CbOp(0x14, 8, "RL H")]
+        void RL_H()
+        {
+            RegH = RotateLeftThrough(RegH);
+        }
+
+        [CbOp(0x15, 8, "RL L")]
+        void RL_L()
+        {
+            RegL = RotateLeftThrough(RegL);
+        }
+
+        [CbOp(0x16, 16, "RL A")]
+        void RL_HL()
+        {
+            var result = RotateLeftThrough(Mmu.ReadByte(HL));
+            Mmu.WriteByte(HL, result);
+        }
+
+        [CbOp(0x0F, 8, "RRC A")]
+        void RRC_A()
+        {
+            RegA = RotateRight(RegA);
+        }
+
+        [CbOp(0x08, 8, "RRC B")]
+        void RRC_B()
+        {
+            RegB = RotateRight(RegB);
+        }
+
+        [CbOp(0x09, 8, "RRC C")]
+        void RRC_C()
+        {
+            RegC = RotateRight(RegC);
+        }
+
+        [CbOp(0x0A, 8, "RRC D")]
+        void RRC_D()
+        {
+            RegD = RotateRight(RegD);
+        }
+
+        [CbOp(0x0B, 8, "RRC E")]
+        void RRC_E()
+        {
+            RegE = RotateRight(RegE);
+        }
+
+        [CbOp(0x0C, 8, "RRC H")]
+        void RRC_H()
+        {
+            RegH = RotateRight(RegH);
+        }
+
+        [CbOp(0x0D, 8, "RRC L")]
+        void RRC_L()
+        {
+            RegL = RotateRight(RegL);
+        }
+
+        [CbOp(0x0E, 16, "RRC A")]
+        void RRC_HL()
+        {
+            var result = RotateRight(Mmu.ReadByte(HL));
+            Mmu.WriteByte(HL, result);
+        }
+
+        [CbOp(0x1F, 8, "RR A")]
+        void RR_A()
+        {
+            RegA = RotateRightThrough(RegA);
+        }
+
+        [CbOp(0x18, 8, "RR B")]
+        void RR_B()
+        {
+            RegB = RotateRightThrough(RegB);
+        }
+
+        [CbOp(0x19, 8, "RR C")]
+        void RR_C()
+        {
+            RegC = RotateRightThrough(RegC);
+        }
+
+        [CbOp(0x1A, 8, "RR D")]
+        void RR_D()
+        {
+            RegD = RotateRightThrough(RegD);
+        }
+
+        [CbOp(0x1B, 8, "RR E")]
+        void RR_E()
+        {
+            RegE = RotateRightThrough(RegE);
+        }
+
+        [CbOp(0x1C, 8, "RR H")]
+        void RR_H()
+        {
+            RegH = RotateRightThrough(RegH);
+        }
+
+        [CbOp(0x1D, 8, "RR L")]
+        void RR_L()
+        {
+            RegL = RotateRightThrough(RegL);
+        }
+
+        [CbOp(0x1E, 16, "RR A")]
+        void RR_HL()
+        {
+            var result = RotateRightThrough(Mmu.ReadByte(HL));
+            Mmu.WriteByte(HL, result);
         }
 
         #endregion
