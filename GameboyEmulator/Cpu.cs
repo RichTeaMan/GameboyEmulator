@@ -2448,62 +2448,398 @@ namespace GameboyEmulator
         #endregion
 
         #region BIT OPS
-
-        [CbOp(0x47, 8, "BIT {0} A")]
-        void BIT_bA()
+        
+        [CbOp(0x40, 8, "BIT 0b")]
+        void BIT_0B()
         {
-            var bit = ReadByte();
-            TestBit(bit, RegA);
+            TestBit(0, RegB);
         }
 
-        [CbOp(0x40, 8, "BIT {0} B")]
-        void BIT_bB()
+        [CbOp(0x41, 8, "BIT 0c")]
+        void BIT_0C()
         {
-            var bit = ReadByte();
-            TestBit(bit, RegB);
+            TestBit(0, RegC);
         }
 
-        [CbOp(0x41, 8, "BIT {0} C")]
-        void BIT_bC()
+        [CbOp(0x42, 8, "BIT 0d")]
+        void BIT_0D()
         {
-            var bit = ReadByte();
-            TestBit(bit, RegC);
+            TestBit(0, RegD);
         }
 
-        [CbOp(0x42, 8, "BIT {0} D")]
-        void BIT_bD()
+        [CbOp(0x43, 8, "BIT 0e")]
+        void BIT_0E()
         {
-            var bit = ReadByte();
-            TestBit(bit, RegD);
+            TestBit(0, RegE);
         }
 
-        [CbOp(0x43, 8, "BIT {0} E")]
-        void BIT_bE()
+        [CbOp(0x44, 8, "BIT 0h")]
+        void BIT_0H()
         {
-            var bit = ReadByte();
-            TestBit(bit, RegE);
+            TestBit(0, RegH);
         }
 
-        [CbOp(0x44, 8, "BIT {0} H")]
-        void BIT_bH()
+        [CbOp(0x45, 8, "BIT 0l")]
+        void BIT_0L()
         {
-            var bit = ReadByte();
-            TestBit(bit, RegH);
+            TestBit(0, RegL);
         }
 
-        [CbOp(0x45, 8, "BIT {0} L")]
-        void BIT_bL()
-        {
-            var bit = ReadByte();
-            TestBit(bit, RegL);
-        }
-
-        [CbOp(0x46, 16, "BIT {0} (HL)")]
-        void BIT_bHL()
+        [CbOp(0x46, 16, "BIT 0HL")]
+        void BIT_0HL()
         {
             var value = Mmu.ReadByte(HL);
-            var bit = ReadByte();
-            TestBit(bit, value);
+            TestBit(0, value);
+        }
+
+        [CbOp(0x47, 8, "BIT 0a")]
+        void BIT_0A()
+        {
+            TestBit(0, RegA);
+        }
+
+
+        [CbOp(0x48, 8, "BIT 1b")]
+        void BIT_1B()
+        {
+            TestBit(1, RegB);
+        }
+
+        [CbOp(0x49, 8, "BIT 1c")]
+        void BIT_1C()
+        {
+            TestBit(1, RegC);
+        }
+
+        [CbOp(0x4A, 8, "BIT 1d")]
+        void BIT_1D()
+        {
+            TestBit(1, RegD);
+        }
+
+        [CbOp(0x4B, 8, "BIT 1e")]
+        void BIT_1E()
+        {
+            TestBit(1, RegE);
+        }
+
+        [CbOp(0x4C, 8, "BIT 1h")]
+        void BIT_1H()
+        {
+            TestBit(1, RegH);
+        }
+
+        [CbOp(0x4D, 8, "BIT 1l")]
+        void BIT_1L()
+        {
+            TestBit(1, RegL);
+        }
+
+        [CbOp(0x4E, 16, "BIT 1HL")]
+        void BIT_1HL()
+        {
+            var value = Mmu.ReadByte(HL);
+            TestBit(1, value);
+        }
+
+        [CbOp(0x4F, 8, "BIT 0a")]
+        void BIT_1A()
+        {
+            TestBit(1, RegA);
+        }
+
+        [CbOp(0x50, 8, "BIT 2b")]
+        void BIT_2B()
+        {
+            TestBit(2, RegB);
+        }
+
+        [CbOp(0x51, 8, "BIT 2c")]
+        void BIT_2C()
+        {
+            TestBit(2, RegC);
+        }
+
+        [CbOp(0x52, 8, "BIT 2d")]
+        void BIT_2D()
+        {
+            TestBit(2, RegD);
+        }
+
+        [CbOp(0x53, 8, "BIT 2e")]
+        void BIT_2E()
+        {
+            TestBit(2, RegE);
+        }
+
+        [CbOp(0x54, 8, "BIT 2h")]
+        void BIT_2H()
+        {
+            TestBit(2, RegH);
+        }
+
+        [CbOp(0x55, 8, "BIT 2l")]
+        void BIT_2L()
+        {
+            TestBit(2, RegL);
+        }
+
+        [CbOp(0x56, 16, "BIT 2HL")]
+        void BIT_2HL()
+        {
+            var value = Mmu.ReadByte(HL);
+            TestBit(2, value);
+        }
+
+        [CbOp(0x57, 8, "BIT 2a")]
+        void BIT_2A()
+        {
+            TestBit(2, RegA);
+        }
+
+        [CbOp(0x58, 8, "BIT 3b")]
+        void BIT_3B()
+        {
+            TestBit(3, RegB);
+        }
+
+        [CbOp(0x59, 8, "BIT 3c")]
+        void BIT_3C()
+        {
+            TestBit(3, RegC);
+        }
+
+        [CbOp(0x5A, 8, "BIT 3d")]
+        void BIT_3D()
+        {
+            TestBit(3, RegD);
+        }
+
+        [CbOp(0x5B, 8, "BIT 3e")]
+        void BIT_3E()
+        {
+            TestBit(3, RegE);
+        }
+
+        [CbOp(0x5C, 8, "BIT 3h")]
+        void BIT_3H()
+        {
+            TestBit(3, RegH);
+        }
+
+        [CbOp(0x5D, 8, "BIT 3l")]
+        void BIT_3L()
+        {
+            TestBit(3, RegL);
+        }
+
+        [CbOp(0x5E, 16, "BIT 3HL")]
+        void BIT_3HL()
+        {
+            var value = Mmu.ReadByte(HL);
+            TestBit(3, value);
+        }
+
+        [CbOp(0x5F, 8, "BIT 3a")]
+        void BIT_3A()
+        {
+            TestBit(3, RegA);
+        }
+
+        [CbOp(0x60, 8, "BIT 4b")]
+        void BIT_4B()
+        {
+            TestBit(4, RegB);
+        }
+
+        [CbOp(0x61, 8, "BIT 4c")]
+        void BIT_4C()
+        {
+            TestBit(4, RegC);
+        }
+
+        [CbOp(0x62, 8, "BIT 4d")]
+        void BIT_4D()
+        {
+            TestBit(4, RegD);
+        }
+
+        [CbOp(0x63, 8, "BIT 4e")]
+        void BIT_4E()
+        {
+            TestBit(4, RegE);
+        }
+
+        [CbOp(0x64, 8, "BIT 4h")]
+        void BIT_4H()
+        {
+            TestBit(4, RegH);
+        }
+
+        [CbOp(0x65, 8, "BIT 4l")]
+        void BIT_4L()
+        {
+            TestBit(4, RegL);
+        }
+
+        [CbOp(0x66, 16, "BIT 4HL")]
+        void BIT_4HL()
+        {
+            var value = Mmu.ReadByte(HL);
+            TestBit(4, value);
+        }
+
+        [CbOp(0x67, 8, "BIT 4a")]
+        void BIT_4A()
+        {
+            TestBit(4, RegA);
+        }
+
+        [CbOp(0x68, 8, "BIT 5b")]
+        void BIT_5B()
+        {
+            TestBit(3, RegB);
+        }
+
+        [CbOp(0x69, 8, "BIT 5c")]
+        void BIT_5C()
+        {
+            TestBit(5, RegC);
+        }
+
+        [CbOp(0x6A, 8, "BIT 5d")]
+        void BIT_5D()
+        {
+            TestBit(5, RegD);
+        }
+
+        [CbOp(0x6B, 8, "BIT 5e")]
+        void BIT_5E()
+        {
+            TestBit(5, RegE);
+        }
+
+        [CbOp(0x6C, 8, "BIT 5h")]
+        void BIT_5H()
+        {
+            TestBit(5, RegH);
+        }
+
+        [CbOp(0x6D, 8, "BIT 5l")]
+        void BIT_5L()
+        {
+            TestBit(5, RegL);
+        }
+
+        [CbOp(0x6E, 16, "BIT 5HL")]
+        void BIT_5HL()
+        {
+            var value = Mmu.ReadByte(HL);
+            TestBit(5, value);
+        }
+
+        [CbOp(0x6F, 8, "BIT 5a")]
+        void BIT_5A()
+        {
+            TestBit(5, RegA);
+        }
+
+        [CbOp(0x70, 8, "BIT 6b")]
+        void BIT_6B()
+        {
+            TestBit(6, RegB);
+        }
+
+        [CbOp(0x71, 8, "BIT 6c")]
+        void BIT_6C()
+        {
+            TestBit(6, RegC);
+        }
+
+        [CbOp(0x72, 8, "BIT 6d")]
+        void BIT_6D()
+        {
+            TestBit(6, RegD);
+        }
+
+        [CbOp(0x73, 8, "BIT 6e")]
+        void BIT_6E()
+        {
+            TestBit(6, RegE);
+        }
+
+        [CbOp(0x74, 8, "BIT 6h")]
+        void BIT_6H()
+        {
+            TestBit(6, RegH);
+        }
+
+        [CbOp(0x75, 8, "BIT 6l")]
+        void BIT_6L()
+        {
+            TestBit(6, RegL);
+        }
+
+        [CbOp(0x76, 16, "BIT 6HL")]
+        void BIT_6HL()
+        {
+            var value = Mmu.ReadByte(HL);
+            TestBit(6, value);
+        }
+
+        [CbOp(0x77, 8, "BIT 6a")]
+        void BIT_6A()
+        {
+            TestBit(6, RegA);
+        }
+
+        [CbOp(0x78, 8, "BIT 7b")]
+        void BIT_7B()
+        {
+            TestBit(7, RegB);
+        }
+
+        [CbOp(0x79, 8, "BIT 7c")]
+        void BIT_7C()
+        {
+            TestBit(7, RegC);
+        }
+
+        [CbOp(0x7A, 8, "BIT 7d")]
+        void BIT_7D()
+        {
+            TestBit(7, RegD);
+        }
+
+        [CbOp(0x7B, 8, "BIT 7e")]
+        void BIT_7E()
+        {
+            TestBit(7, RegE);
+        }
+
+        [CbOp(0x7C, 8, "BIT 7h")]
+        void BIT_7H()
+        {
+            TestBit(7, RegH);
+        }
+
+        [CbOp(0x7D, 8, "BIT 7l")]
+        void BIT_7L()
+        {
+            TestBit(7, RegL);
+        }
+
+        [CbOp(0x7E, 16, "BIT 7HL")]
+        void BIT_7HL()
+        {
+            var value = Mmu.ReadByte(HL);
+            TestBit(7, value);
+        }
+
+        [CbOp(0x7F, 8, "BIT 7a")]
+        void BIT_7A()
+        {
+            TestBit(7, RegA);
         }
 
         [CbOp(0xC7, 8, "SET {0} A")]
