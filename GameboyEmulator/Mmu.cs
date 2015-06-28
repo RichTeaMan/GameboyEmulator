@@ -37,6 +37,8 @@ namespace GameboyEmulator
         public byte[] Ram { get; private set; }
         public byte[] Zram { get; private set; }
 
+        public Gpu Gpu { get; set; }
+
         public Mmu()
         {
             InBios = true;
@@ -44,12 +46,13 @@ namespace GameboyEmulator
             CartRam = new byte[0x2000];
             Ram = new byte[0x8000];
             Zram = new byte[0x80];
-            
         }
 
-        public async void ReadRom(string filePath)
+        public async Task ReadRom(string filePath)
         {
             var file = await FileSystem.Current.GetFileFromPathAsync(filePath);
+            if (file == null)
+                throw new FileNotFoundException();
             using (var stream = await file.OpenAsync(FileAccess.Read))
             using (var memoryStream = new MemoryStream())
             {
@@ -121,6 +124,51 @@ namespace GameboyEmulator
             return result;
         }
 
+        private byte? CheckGpuRead(ushort address)
+        {
+            // GPU registers
+            if (address > 0xFE00 && address < 0xFF80)
+            {
+                // I/O control handling
+                //switch (address & 0x00F0)
+                //{
+                //    // GPU (64 registers)
+                //    case 0x40:
+                //    case 0x50:
+                //    case 0x60:
+                //    case 0x70:
+                //        return Gpu.Read(address);
+                //}
+                //return null;
+                return Gpu.Read(address);
+            }
+            return null;
+        }
+
+        private bool CheckGpuWrite(ushort address, byte value)
+        {
+            // GPU registers
+            if (address > 0xFE00 && address < 0xFF80)
+            {
+                // I/O control handling
+                //switch (address & 0x00F0)
+                //{
+                //    // GPU (64 registers)
+                //    case 0x40:
+                //    case 0x50:
+                //    case 0x60:
+                //    case 0x70:
+                //        Gpu.Write(address, value);
+                //        return true;
+                //}
+                //return false;
+
+                Gpu.Write(address, value);
+                return true;
+            }
+            return false;
+        }
+
         /// <summary>
         /// Read 8-bit byte from a given address.
         /// </summary>
@@ -128,7 +176,14 @@ namespace GameboyEmulator
         /// <returns></returns>
         public byte ReadByte(ushort address)
         {
-            throw new NotImplementedException();
+            var value = CheckGpuRead(address);
+            if(!value.HasValue)
+            {
+                byte[] array = null;
+                int p = resolve(address, ref array);
+                value = array[p];
+            }
+            return value.Value;
         }
 
         /// <summary>
@@ -138,7 +193,14 @@ namespace GameboyEmulator
         /// <returns></returns>
         public ushort ReadWord(ushort address)
         {
-            throw new NotImplementedException();
+            if (CheckGpuRead(address).HasValue)
+            {
+                throw new Exception("Gpu word read.");
+            }
+            byte[] array = null;
+            int p = resolve(address, ref array);
+            var result = Utility.CombineUShort(array[p], array[p + 1]);
+            return result;
         }
 
         /// <summary>
@@ -147,7 +209,17 @@ namespace GameboyEmulator
         /// <param name="address"></param>
         public void WriteByte(ushort address, byte value)
         {
-            throw new NotImplementedException();
+            if (!CheckGpuWrite(address, value))
+            {
+                byte[] array = null;
+                int p = resolve(address, ref array);
+                array[p] = value;
+                if (address >= 0x8000 && address < 0xA000)
+                {
+                    Gpu.UpdateTile(address & 0x1FFF, value);
+                }
+
+            }
         }
 
         /// <summary>
@@ -156,7 +228,15 @@ namespace GameboyEmulator
         /// <param name="address"></param>
         public void WriteWord(ushort address, ushort value)
         {
-            throw new NotImplementedException();
+            if (CheckGpuRead(address).HasValue)
+            {
+                throw new Exception("Gpu word write.");
+            }
+            byte[] array = null;
+            int p = resolve(address, ref array);
+            var bytes = value.GetBytes();
+            array[p] = bytes[0];
+            array[p + 1] = bytes[1];
         }
 
     }
