@@ -36,10 +36,12 @@
   <ItemGroup>
     <Compile Include="CbOpAttribute.cs" />
     <Compile Include="Cpu.cs" />
+    <Compile Include="Gpu.cs" />
     <Compile Include="IncorrectResultException.cs" />
     <Compile Include="Mmu.cs" />
     <Compile Include="Nibble.cs" />
     <Compile Include="OpAttribute.cs" />
+    <Compile Include="Pixel.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Utility.cs" />
   </ItemGroup>
