@@ -2,12 +2,15 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Reflection;
 
 namespace GameboyEmulator
 {
     public class Cpu
     {
         const ushort P1 = 0xFF00;
+
+        public int Timer { get; set; }
 
         public byte RegA { get; protected set; }
         public byte RegB { get; protected set; }
@@ -116,7 +119,6 @@ namespace GameboyEmulator
             set { RegF.BitSet(7, value); }
         }
 
-
         /// <summary>
         /// Gets or sets the Operation flag (0x40). True if the last operation was a subtraction.
         /// </summary>
@@ -149,13 +151,59 @@ namespace GameboyEmulator
 
         public Mmu Mmu { get; set; }
 
+        private Dictionary<int, CpuInstruction> Map;
+
         public Cpu()
         {
             PC = 0;
             SP = 0xFFFE;
+
+            BuildInstructionList();
         }
 
         #region Methods
+
+        public int Process()
+        {
+            int opCode = Mmu.ReadByte(PC);
+            
+            if(opCode == 0xCB)
+            {
+                PC++;
+                var secondaryOpCode = Mmu.ReadByte(PC);
+                opCode = Utility.CombineUShort(0xCB, secondaryOpCode);
+            }
+            CpuInstruction ins;
+            if(Map.TryGetValue(opCode, out ins))
+            {
+                int cycles = ins.Execute();
+                PC++;
+                return cycles;
+            }
+            else
+            {
+                throw new Exception("No instruction.");
+            }
+        }
+
+        private void BuildInstructionList()
+        {
+            Map = new Dictionary<int, CpuInstruction>();
+
+            var cpuMethods = GetType().GetRuntimeMethods().Where(m => m.CustomAttributes.Where(a => a.AttributeType == typeof(OpAttribute)).Count() > 0);
+            foreach(var m in cpuMethods)
+            {
+                var ins = CpuInstruction.GetInstruction(this, m);
+                Map.Add(ins.OpCode, ins);
+            }
+
+            var cbCpuMethods = GetType().GetRuntimeMethods().Where(m => m.CustomAttributes.Where(a => a.AttributeType == typeof(CbOpAttribute)).Count() > 0);
+            foreach (var m in cbCpuMethods)
+            {
+                var ins = CpuInstruction.GetInstruction(this, m);
+                Map.Add(ins.OpCode, ins);
+            }
+        }
 
         void PushByte(byte value)
         {
@@ -562,7 +610,7 @@ namespace GameboyEmulator
             RegE = value;
         }
 
-        [Op(0x16, 8, "LD H {0}")]
+        [Op(0x26, 8, "LD H {0}")]
         void LD_Hn()
         {
             var value = ReadByte();
@@ -1094,10 +1142,10 @@ namespace GameboyEmulator
         void LD_HLnn()
         {
             RegL = ReadByte();
-            RegH = ReadByte();
+            RegH = ReadByte();       
         }
 
-        [Op(0x21, 12, "LD SP nn")]
+        [Op(0x31, 12, "LD SP nn")]
         void LD_SPnn()
         {
             SP = ReadWord();
@@ -2590,7 +2638,7 @@ namespace GameboyEmulator
                 JP();
         }
 
-        [Op(0xC2, 12, "JP Z")]
+        [Op(0xCA, 12, "JP Z")]
         void JP_Z()
         {
             if (ZeroFlag)
