@@ -13,8 +13,8 @@ namespace GameboyEmulator
 
         public int Mode { get; private set; }
         public int ModeClock { get; private set; }
-        public int Line { get; private set; }
-        public int[][][] Tileset { get; private set; }
+        public byte Line { get; private set; }
+        public byte[][][] Tileset { get; private set; }
 
         public Pixel[] Screen { get; set; }
         public bool BgSwitch { get; private set; }
@@ -22,17 +22,21 @@ namespace GameboyEmulator
         public bool BgTile { get; private set; }
         public bool LcdSwitch { get; private set; }
 
-        public int ScreenY { get; private set; }
-        public int ScreenX { get; private set; }
+        public byte ScreenY { get; private set; }
+        public byte ScreenX { get; private set; }
 
         public byte[][] Palette { get; private set; }
 
+        public delegate void DrawEventHandler(Gpu sender, Pixel[] pixels, EventArgs e);
+        public event DrawEventHandler DrawEvent;
 
         public Gpu(Cpu cpu)
         {
             Cpu = cpu;
             Vram = Cpu.Mmu.Vram;
             Palette = new byte[4][];
+
+            Reset();
         }
 
         public void Step()
@@ -196,22 +200,23 @@ namespace GameboyEmulator
             {
                 Screen[i] = new Pixel();
             }
+            if (DrawEvent != null)
+                DrawEvent.Invoke(this, Screen, new EventArgs());
 
-
-            Tileset = new int[384][][];
+            Tileset = new byte[384][][];
             for (var i = 0; i < 384; i++)
             {
-                Tileset[i] = new int[8][];
+                Tileset[i] = new byte[8][];
                 for (var j = 0; j < 8; j++)
                 {
-                    Tileset[i][j] = new int[] { 0, 0, 0, 0, 0, 0, 0, 0 };
+                    Tileset[i][j] = new byte[] { 0, 0, 0, 0, 0, 0, 0, 0 };
                 }
             }
         }
 
         // Takes a value written to VRAM, and updates the
         // internal tile data set
-        private void UpdateTile(int addr, int val)
+        public void UpdateTile(int addr, byte val)
         {
             // Get the "base address" for this tile row
             addr &= 0x1FFE;
@@ -220,29 +225,34 @@ namespace GameboyEmulator
             var tile = (addr >> 4) & 511;
             var y = (addr >> 1) & 7;
 
+            // may not be good
+            if(tile >= 384)
+            {
+                return;
+            }
             int sx;
             for (var x = 0; x < 8; x++)
             {
                 // Find bit index for this pixel
                 sx = 1 << (7 - x);
 
+                var v = (((Vram[addr] & sx) == 1) ? 1 : 0) + (((Vram[addr + 1] & sx) == 1) ? 2 : 0);
                 // Update tile set
-                Tileset[tile][y][x] =
-                    (((Vram[addr] & sx) == 1) ? 1 : 0) +
-                    (((Vram[addr + 1] & sx) == 1) ? 2 : 0);
+                Tileset[tile][y][x] = (byte)v;
             }
         }
 
-        private int rb(int addr)
+        public byte Read(int addr)
         {
             switch (addr)
             {
                 // LCD Control
                 case 0xFF40:
-                    return (BgSwitch ? 0x01 : 0x00) |
+                    var r = (BgSwitch ? 0x01 : 0x00) |
                        (BgMap ? 0x08 : 0x00) |
                        (BgTile ? 0x10 : 0x00) |
                        (LcdSwitch ? 0x80 : 0x00);
+                    return (byte)r;
 
                 // Scroll Y
                 case 0xFF42:
@@ -261,7 +271,7 @@ namespace GameboyEmulator
             }
         }
 
-        private void wb(int addr, int val)
+        public void Write(int addr, byte val)
         {
             switch (addr)
             {
