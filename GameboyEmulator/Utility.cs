@@ -8,6 +8,30 @@ namespace GameboyEmulator
 {
     public static class Utility
     {
+        public static ushort CombineUShort(byte a, byte b)
+        {
+            var bytes = new byte[] { b, a };
+            var result = (ushort)BitConverter.ToUInt16(bytes, 0);
+            return result;
+        }
+
+        public static short CombineShort(byte a, byte b)
+        {
+            var bytes = new byte[] { b, a };
+            var result = (short)BitConverter.ToInt16(bytes, 0);
+            return result;
+        }
+
+        public static byte[] GetBytes(this ushort value)
+        {
+            return BitConverter.GetBytes(value);
+        }
+
+        public static byte[] GetBytes(this short value)
+        {
+            return BitConverter.GetBytes(value);
+        }
+
         public static Nibble LowNibble(this byte b)
         {
             var mask = 0x0F;
