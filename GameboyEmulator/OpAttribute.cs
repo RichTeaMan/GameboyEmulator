@@ -8,13 +8,13 @@ namespace GameboyEmulator
 {
     internal class OpAttribute : Attribute
     {
-        public byte OpCode { get; private set; }
+        public int OpCode { get; private set; }
         public int Cycles { get; private set; }
         public string AssemblyInstruction { get; private set; }
 
-        public OpAttribute(byte opCode, int cycles, string assemblyInstruction) : base()
+        public OpAttribute(int opCode, int cycles, string assemblyInstruction) : base()
         {
-            OpCode = OpCode;
+            OpCode = opCode;
             Cycles = cycles;
             AssemblyInstruction = assemblyInstruction;
         }

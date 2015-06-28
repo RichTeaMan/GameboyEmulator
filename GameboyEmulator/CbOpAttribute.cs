@@ -8,8 +8,8 @@ namespace GameboyEmulator
 {
     internal class CbOpAttribute : OpAttribute
     {
-        public CbOpAttribute(byte opCode, int cycles, string assemblyInstruction) :
-            base(opCode, cycles, assemblyInstruction)
+        public CbOpAttribute(int opCode, int cycles, string assemblyInstruction) :
+            base(0xCB00 + opCode, cycles, assemblyInstruction)
         { }
     }
 }
