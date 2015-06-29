@@ -119,7 +119,12 @@ namespace GameboyEmulator
                 array = Ram;
                 result = address - 0xE000;
             }
-            else if(address >= 0xFF00 && address <= 0xFF7F)
+            else if (address >= 0xFE00 && address < 0xFF00)
+            {
+                //if (address < 0xFEA0) Gpu._oam[addr & 0xFF] = val;
+                //Gpu.buildobjdata(address - 0xFE00, val);
+            }
+            else if (address >= 0xFF00 && address <= 0xFF7F)
             {
                 // for IO
                 // to be implemented
@@ -193,16 +198,26 @@ namespace GameboyEmulator
             var value = CheckGpuRead(address);
             if(!value.HasValue)
             {
-                byte[] array = null;
-                int p = resolve(address, ref array);
-                if (array != null)
+                if (address >= 0xFE00 && address < 0xFF00)
                 {
-                    value = array[p];
+                    if (address < 0xFEA0)
+                        value = Gpu._oam[address & 0xFF];
+                    else
+                        value = 0;
                 }
                 else
                 {
-                    Debug.WriteLine("{0} attempted to read from {0:X4}, no location found. Returned 0.", address);
-                    value = 0;
+                    byte[] array = null;
+                    int p = resolve(address, ref array);
+                    if (array != null)
+                    {
+                        value = array[p];
+                    }
+                    else
+                    {
+                        Debug.WriteLine("{0} attempted to read from {0:X4}, no location found. Returned 0.", address);
+                        value = 0;
+                    }
                 }
             }
             return value.Value;
@@ -215,13 +230,9 @@ namespace GameboyEmulator
         /// <returns></returns>
         public ushort ReadWord(ushort address)
         {
-            if (CheckGpuRead(address).HasValue)
-            {
-                throw new Exception("Gpu word read.");
-            }
-            byte[] array = null;
-            int p = resolve(address, ref array);
-            var result = Utility.CombineUShort(array[p], array[p + 1]);
+            var byte1 = ReadByte(address);
+            var byte2 = ReadByte((ushort)(address + 1));
+            var result = Utility.CombineUShort(byte2, byte1);
             return result;
         }
 
@@ -233,21 +244,28 @@ namespace GameboyEmulator
         {
             if (!CheckGpuWrite(address, value))
             {
-                byte[] array = null;
-                int p = resolve(address, ref array);
-                if (array != null)
+                if (address >= 0xFE00 && address < 0xFF00)
                 {
-                    array[p] = value;
+                    if (address < 0xFEA0) Gpu._oam[address & 0xFF] = value;
+                    Gpu.buildobjdata((ushort)(address - 0xFE00), value);
                 }
                 else
                 {
-                    Debug.WriteLine("{0} attempted to write to {0:X4}, no location found.", address);
+                    byte[] array = null;
+                    int p = resolve(address, ref array);
+                    if (array != null)
+                    {
+                        array[p] = value;
+                    }
+                    else
+                    {
+                        Debug.WriteLine("{0} attempted to write to {0:X4}, no location found.", address);
+                    }
+                    if (address >= 0x8000 && address < 0xA000)
+                    {
+                        Gpu.UpdateTile(address & 0x1FFF, value);
+                    }
                 }
-                if (address >= 0x8000 && address < 0xA000)
-                {
-                    Gpu.UpdateTile(address & 0x1FFF, value);
-                }
-
             }
         }
 
@@ -257,22 +275,10 @@ namespace GameboyEmulator
         /// <param name="address"></param>
         public void WriteWord(ushort address, ushort value)
         {
-            if (CheckGpuRead(address).HasValue)
-            {
-                throw new Exception("Gpu word write.");
-            }
-            byte[] array = null;
-            int p = resolve(address, ref array);
-            if (array != null)
-            {
-                var bytes = value.GetBytes();
-                array[p] = bytes[0];
-                array[p + 1] = bytes[1];
-            }
-            else
-            {
-                Debug.WriteLine("{0} attempted to write to {0:X4}, no location found.", address);
-            }
+            var bytes = value.GetBytes();
+            // do bytes need to be reversed?
+            WriteByte(address, bytes[0]);
+            WriteByte((ushort)(address + 1), bytes[1]);
             
         }
 
