@@ -112,5 +112,10 @@ namespace GameboyEmulator
             var result = b + value;
             return (ushort)result;
         }
+
+        public static string ToHex(this ushort value)
+        {
+            return value.ToString("X4");
+        }
     }
 }
