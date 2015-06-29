@@ -22,11 +22,13 @@ namespace GameboyEmulator.Wpf
     /// </summary>
     public partial class MainWindow : Window
     {
+        private WriteableBitmap bitmap { get; set; }
         Gameboy Gameboy { get; set; }
         Thread GameThread { get; set; }
         public MainWindow()
         {
             InitializeComponent();
+            bitmap = new WriteableBitmap(160, 144, 160 / 1.91, 140 / 1.71, PixelFormats.Rgb24, null);
             Gameboy = new Gameboy();
             Gameboy.DrawEvent += Gameboy_DrawEvent;
             GameThread = new Thread(new ThreadStart(gameboyThread));
@@ -38,10 +40,6 @@ namespace GameboyEmulator.Wpf
             await Gameboy.Mmu.ReadRom(@"C:\Users\Thomas\Source\Repos\GameboyEmulator\GameboyEmulator.Wpf\Tetris.gb");
             Gameboy.Begin();
         }
-
-        // Create the writeable bitmap will be used to write and update.
-        private WriteableBitmap _wb =
-            new WriteableBitmap(100, 100, 96, 96, PixelFormats.Rgb24, null);
 
         private void Gameboy_DrawEvent(Gameboy sender, Pixel[] pixels, EventArgs e)
         {
@@ -55,10 +53,10 @@ namespace GameboyEmulator.Wpf
 
             GameArea.Dispatcher.BeginInvoke((Action)(() =>
             {
-                var _rect = new Int32Rect(0, 0, _wb.PixelWidth, _wb.PixelHeight);
+                var _rect = new Int32Rect(0, 0, bitmap.PixelWidth, bitmap.PixelHeight);
                 //Update writeable bitmap with the colorArray to the image.
-                _wb.WritePixels(_rect, bytes.ToArray(), 160 * 3, 0);
-                GameArea.Source = _wb;
+                bitmap.WritePixels(_rect, bytes.ToArray(), 160 * 3, 0);
+                GameArea.Source = bitmap;
             }));
 
         }
