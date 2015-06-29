@@ -11,7 +11,7 @@ namespace GameboyEmulator
         public delegate void ProcessEventHandler(Gameboy sender, EventArgs e);
         public event ProcessEventHandler ProcessEvent;
 
-        public delegate void DrawEventHandler(Gameboy sender, Pixel[][] pixels, EventArgs e);
+        public delegate void DrawEventHandler(Gameboy sender, Pixel[] pixels, EventArgs e);
         public event DrawEventHandler DrawEvent;
 
         public Cpu Cpu { get; private set; }
@@ -22,6 +22,7 @@ namespace GameboyEmulator
         {
             Cpu = new Cpu();
             Mmu = new Mmu();
+            Mmu.Cpu = Cpu;
             Cpu.Mmu = Mmu;
             Gpu = new Gpu(Cpu);
             Mmu.Gpu = Gpu;
@@ -31,24 +32,9 @@ namespace GameboyEmulator
 
         private void Gpu_DrawEvent(Gpu sender, Pixel[] pixels, EventArgs e)
         {
-            var screen = new Pixel[160][];
-            screen[0] = new Pixel[144];
-            int w = 0;
-            int h = 0;
-            foreach(var p in pixels)
-            {
-                screen[w][h] = p;
-                w++;
-                if(w == 160)
-                {
-                    w = 0;
-                    h++;
-                    screen[h] = new Pixel[144];
-                }
-            }
             if(DrawEvent != null)
             {
-                DrawEvent.Invoke(this, screen, new EventArgs());
+                DrawEvent.Invoke(this, pixels, new EventArgs());
             }
         }
         
