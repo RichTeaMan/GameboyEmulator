@@ -82,8 +82,11 @@ namespace GameboyEmulator
                         {
                             // Enter vblank
                             Mode = 1;
-                            // draw
-                            //GPU._canvas.putImageData(GPU._scrn, 0, 0);
+
+                            if (DrawEvent != null)
+                            {
+                                DrawEvent.Invoke(this, Screen, new EventArgs());
+                            }
                         }
                         else
                         {
@@ -201,10 +204,17 @@ namespace GameboyEmulator
                 Screen[i] = new Pixel();
             }
             if (DrawEvent != null)
+            {
                 DrawEvent.Invoke(this, Screen, new EventArgs());
+            }
 
-            Tileset = new byte[384][][];
-            for (var i = 0; i < 384; i++)
+            for (int i = 0; i < 4; i++)
+            {
+                Palette[i] = new byte[] { 255, 255, 255, 255 };
+            }
+
+            Tileset = new byte[512][][];
+            for (var i = 0; i < 512; i++)
             {
                 Tileset[i] = new byte[8][];
                 for (var j = 0; j < 8; j++)
@@ -226,7 +236,7 @@ namespace GameboyEmulator
             var y = (addr >> 1) & 7;
 
             // may not be good
-            if(tile >= 384)
+            if(tile >= 512)
             {
                 return;
             }
