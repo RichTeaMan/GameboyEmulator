@@ -20,7 +20,6 @@ namespace GameboyEmulator
 
         public int Execute()
         {
-            Debug.WriteLine("0x{0:X4}\t{1}", Cpu.PC, AssemblyInstruction);
             MethodInfo.Invoke(Cpu, null);
             Cpu.Timer += Cycles;
             return Cycles;
