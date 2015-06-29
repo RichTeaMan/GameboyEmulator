@@ -1,6 +1,7 @@
 ﻿using PCLStorage;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -38,6 +39,7 @@ namespace GameboyEmulator
         public byte[] Zram { get; private set; }
 
         public Gpu Gpu { get; set; }
+        public Cpu Cpu { get; set; }
 
         public Mmu()
         {
@@ -76,14 +78,21 @@ namespace GameboyEmulator
             // Game ROM and bios. This is needs more work for bank switching.
             if (address < 0x8000)
             {
-                if (address < 0x00FF && InBios)
+                if (!InBios)
                 {
-                    array = Bios;
+                    array = Rom;
                 }
                 else
                 {
-                    InBios = false;
-                    array = Rom;
+                    if (address <= 0x00FF && InBios)
+                    {
+                        array = Bios;
+                    }
+                    else if (Cpu.PC == 0x100)
+                    {
+                        InBios = false;
+                        array = Rom;
+                    }
                 }
             }
             // Graphics RAM
@@ -110,6 +119,11 @@ namespace GameboyEmulator
                 array = Ram;
                 result = address - 0xE000;
             }
+            else if(address >= 0xFF00 && address <= 0xFF7F)
+            {
+                // for IO
+                // to be implemented
+            }
             // Zero page RAM. Faster acting RAM.
             else if (address >= 0xFF80 && address <= 0xFFFF)
             {
@@ -127,7 +141,7 @@ namespace GameboyEmulator
         private byte? CheckGpuRead(ushort address)
         {
             // GPU registers
-            if (address > 0xFE00 && address < 0xFF80)
+            if (address >= 0xFF40 && address <= 0xFF47)
             {
                 // I/O control handling
                 //switch (address & 0x00F0)
@@ -148,7 +162,7 @@ namespace GameboyEmulator
         private bool CheckGpuWrite(ushort address, byte value)
         {
             // GPU registers
-            if (address > 0xFE00 && address < 0xFF80)
+            if (address >= 0xFF40 && address <= 0xFF47)
             {
                 // I/O control handling
                 //switch (address & 0x00F0)
@@ -181,7 +195,15 @@ namespace GameboyEmulator
             {
                 byte[] array = null;
                 int p = resolve(address, ref array);
-                value = array[p];
+                if (array != null)
+                {
+                    value = array[p];
+                }
+                else
+                {
+                    Debug.WriteLine("{0} attempted to read from {0:X4}, no location found. Returned 0.", address);
+                    value = 0;
+                }
             }
             return value.Value;
         }
@@ -213,7 +235,14 @@ namespace GameboyEmulator
             {
                 byte[] array = null;
                 int p = resolve(address, ref array);
-                array[p] = value;
+                if (array != null)
+                {
+                    array[p] = value;
+                }
+                else
+                {
+                    Debug.WriteLine("{0} attempted to write to {0:X4}, no location found.", address);
+                }
                 if (address >= 0x8000 && address < 0xA000)
                 {
                     Gpu.UpdateTile(address & 0x1FFF, value);
@@ -234,9 +263,17 @@ namespace GameboyEmulator
             }
             byte[] array = null;
             int p = resolve(address, ref array);
-            var bytes = value.GetBytes();
-            array[p] = bytes[0];
-            array[p + 1] = bytes[1];
+            if (array != null)
+            {
+                var bytes = value.GetBytes();
+                array[p] = bytes[0];
+                array[p + 1] = bytes[1];
+            }
+            else
+            {
+                Debug.WriteLine("{0} attempted to write to {0:X4}, no location found.", address);
+            }
+            
         }
 
     }
