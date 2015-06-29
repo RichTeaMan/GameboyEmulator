@@ -3055,49 +3055,88 @@ namespace GameboyEmulator
 
         #region CALLS
 
-        [Op(0xCD, 12, "CALL")]
+        /// <summary>
+        /// Performs CALL. This does not modify any timings.
+        /// </summary>
+        /// <returns></returns>
+        private void baseCall()
+        {
+            SP -= 2;
+            Mmu.WriteWord(SP, (ushort)(PC + 2));
+            PC = Mmu.ReadWord(PC);
+        }
+
+        [Op(0xCD, 20, "CALL")]
         void CALL()
         {
-            var address = ReadWord();
-            Mmu.WriteWord(SP, PC);
-            SP -= 2;
-            PC = address;
+            baseCall();
+
+
+            //CALLZnn: function() {
+            //        Z80._r.m = 3; Z80._r.t = 12;
+            //        if ((Z80._r.f & 0x80) == 0x80)
+            //        {
+            //            Z80._r.sp -= 2; MMU.ww(Z80._r.sp, Z80._r.pc + 2);
+            //            Z80._r.pc = MMU.rw(Z80._r.pc); Z80._r.m += 2; Z80._r.t += 8;
+            //        } else
+            //            Z80._r.pc += 2;
         }
+        
 
         [Op(0xC4, 12, "CALL NZ")]
         void CALL_NZ()
         {
             if (!ZeroFlag)
-                CALL();
+            {
+                baseCall();
+                Timer += 8;
+            }
             else
+            {
                 PC += 2;
+            }
         }
 
         [Op(0xCC, 12, "CALL Z")]
         void CALL_Z()
         {
             if (ZeroFlag)
-                CALL();
+            {
+                baseCall();
+                Timer += 8;
+            }
             else
+            {
                 PC += 2;
+            }
         }
 
         [Op(0xD4, 12, "CALL NC")]
         void CALL_NC()
         {
             if (!CarryFlag)
-                CALL();
+            {
+                baseCall();
+                Timer += 8;
+            }
             else
+            {
                 PC += 2;
+            }
         }
 
         [Op(0xDC, 12, "CALL C")]
         void CALL_C()
         {
             if (CarryFlag)
-                CALL();
+            {
+                baseCall();
+                Timer += 8;
+            }
             else
+            {
                 PC += 2;
+            }
         }
 
         #endregion
