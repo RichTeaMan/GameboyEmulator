@@ -38,6 +38,70 @@ namespace GameboyEmulator
         public byte[] Ram { get; private set; }
         public byte[] Zram { get; private set; }
 
+
+        public byte InterruptFlag { get; set; }
+
+        public bool VblankIntFlag
+        {
+            get { return InterruptFlag.IsBitSet(0); }
+            set { InterruptFlag = InterruptFlag.BitSet(0, value); }
+        }
+        public bool LcdStatIntFlag
+        {
+            get { return InterruptFlag.IsBitSet(1); }
+            set { InterruptFlag = InterruptFlag.BitSet(1, value); }
+        }
+
+        public bool TimerIntFlag
+        {
+            get { return InterruptFlag.IsBitSet(2); }
+            set { InterruptFlag = InterruptFlag.BitSet(2, value); }
+        }
+
+        public bool SerialIntFlag
+        {
+            get { return InterruptFlag.IsBitSet(3); }
+            set { InterruptFlag = InterruptFlag.BitSet(3, value); }
+        }
+
+        public bool JoypadIntFlag
+        {
+            get { return InterruptFlag.IsBitSet(4); }
+            set { InterruptFlag = InterruptFlag.BitSet(4, value); }
+        }
+
+        public byte InterruptEnabled { get; set; }
+
+        public bool VblankIntEnabled
+        {
+            get { return InterruptEnabled.IsBitSet(0); }
+            set { InterruptEnabled = InterruptEnabled.BitSet(0, value); }
+        }
+        public bool LcdStatIntEnabled
+        {
+            get { return InterruptEnabled.IsBitSet(1); }
+            set { InterruptEnabled = InterruptEnabled.BitSet(1, value); }
+        }
+
+        public bool TimerIntEnabled
+        {
+            get { return InterruptEnabled.IsBitSet(2); }
+            set { InterruptEnabled = InterruptEnabled.BitSet(2, value); }
+        }
+
+        public bool SerialIntEnabled
+        {
+            get { return InterruptEnabled.IsBitSet(3); }
+            set { InterruptEnabled = InterruptEnabled.BitSet(3, value); }
+        }
+
+        public bool JoypadIntEnabled
+        {
+            get { return InterruptEnabled.IsBitSet(4); }
+            set { InterruptEnabled = InterruptEnabled.BitSet(4, value); }
+        }
+
+
         public Gpu Gpu { get; set; }
         public Cpu Cpu { get; set; }
 
@@ -48,6 +112,8 @@ namespace GameboyEmulator
             CartRam = new byte[0x2000];
             Ram = new byte[0x8000];
             Zram = new byte[0x80];
+            InterruptEnabled = 0;
+            InterruptFlag = 0;
         }
 
         public async Task ReadRom(string filePath)
@@ -128,12 +194,22 @@ namespace GameboyEmulator
             {
                 // for IO
                 // to be implemented
+                if (address == 0xFF0F)
+                {
+                    array = new byte[] { InterruptFlag };
+                    result = 0;
+                }
             }
             // Zero page RAM. Faster acting RAM.
-            else if (address >= 0xFF80 && address <= 0xFFFF)
+            else if (address >= 0xFF80 && address < 0xFFFF)
             {
                 array = Zram;
                 result = address - 0xFF80;
+            }
+            else if (address == 0xFFFF)
+            {
+                array = new byte[] { InterruptEnabled };
+                result = 0;
             }
             else
             {
@@ -246,7 +322,8 @@ namespace GameboyEmulator
             {
                 if (address >= 0xFE00 && address < 0xFF00)
                 {
-                    if (address < 0xFEA0) Gpu._oam[address & 0xFF] = value;
+                    if (address < 0xFEA0)
+                        Gpu._oam[address & 0xFF] = value;
                     Gpu.buildobjdata((ushort)(address - 0xFE00), value);
                 }
                 else

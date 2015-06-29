@@ -94,10 +94,13 @@ namespace GameboyEmulator
             }
         }
 
+        /// <summary>
+        /// Interrupt master enabled.
+        /// </summary>
+        public byte Ime { get; set; }
+
         public bool Stopped { get; protected set; }
         public bool Halted { get; protected set; }
-        public bool DisableInterupt { get; protected set; }
-        public bool EnableInterupt { get; protected set; }
 
         /// <summary>
         /// Gets the Program Counter.
@@ -163,6 +166,7 @@ namespace GameboyEmulator
         {
             PC = 0;
             SP = 0xFFFE;
+            Ime = 1;
 
             BuildInstructionList();
         }
@@ -589,6 +593,26 @@ namespace GameboyEmulator
         #endregion
 
         #region Ops
+
+        #region Interrupts
+
+        /// <summary>
+        /// Start vblank handler (0040h)
+        /// </summary>
+        public void RST40()
+        {
+            // Disable further interrupts
+            Ime = 0;
+
+            // Save current PC on the stack
+            PushWord(PC);
+
+            // Jump to handler
+            PC = 0x0040;
+            Timer += 12;
+        }
+
+        #endregion
 
         #region LD
 
@@ -2067,13 +2091,13 @@ namespace GameboyEmulator
         [Op(0xF3, 4, "DI")]
         void DI()
         {
-            DisableInterupt = true;
+            Ime = 0;
         }
 
         [Op(0xFB, 4, "EI")]
         void EI()
         {
-            DisableInterupt = true;
+            Ime = 1;
         }
 
         #endregion
@@ -3239,7 +3263,7 @@ namespace GameboyEmulator
         {
             var address = PopWord();
             PC = address;
-            EnableInterupt = true;
+            Ime = 1;
         }
 
         #endregion

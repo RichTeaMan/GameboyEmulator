@@ -81,6 +81,7 @@ namespace GameboyEmulator
                     {
                         ModeClock = 0;
                         Line++;
+                        Cpu.Mmu.VblankIntFlag = true;
 
                         if (Line == 143)
                         {
@@ -91,6 +92,8 @@ namespace GameboyEmulator
                             {
                                 DrawEvent.Invoke(this, Screen, new EventArgs());
                             }
+                            Cpu.Mmu.LcdStatIntFlag = true;
+                            Cpu.Mmu.VblankIntFlag = true;
                         }
                         else
                         {
@@ -105,6 +108,7 @@ namespace GameboyEmulator
                     {
                         ModeClock = 0;
                         Line++;
+                        Cpu.Mmu.VblankIntFlag = true;
 
                         if (Line > 153)
                         {
@@ -406,11 +410,11 @@ namespace GameboyEmulator
             {
                 // LCD Control
                 case 0xFF40:
-                    BgSwitch = (val & 0x01) == 1;
-                    ObjSwitch = (val & 0x02) == 1;
-                    BgMap = (val & 0x08) == 1;
-                    BgTile = (val & 0x10) == 1;
-                    LcdSwitch = (val & 0x80) == 1;
+                    BgSwitch = val.IsBitSet(0);
+                    ObjSwitch = val.IsBitSet(1);
+                    BgMap = val.IsBitSet(4);
+                    BgTile = val.IsBitSet(5);
+                    LcdSwitch = val.IsBitSet(7);
                     break;
 
                 // Scroll Y

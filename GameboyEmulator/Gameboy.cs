@@ -45,7 +45,7 @@ namespace GameboyEmulator
                 int cycles = Process();
 
                 // much too slow
-                Task.Delay(cycles * 10);
+                Task.Delay(cycles * 1);
             }
             
         }
@@ -58,6 +58,19 @@ namespace GameboyEmulator
             }
 
             int cycles = Cpu.Process();
+
+            if (Cpu.Ime == 1 && Mmu.InterruptEnabled > 0 && Mmu.InterruptFlag > 0)
+            {
+                // Mask off ints that aren't enabled
+                var ifired = Mmu.InterruptEnabled & Mmu.InterruptFlag;
+
+                if ((ifired & 0x01) == 1)
+                {
+                    Mmu.InterruptFlag &= (255 - 0x01);
+                    Cpu.RST40();
+                }
+            }
+
             Gpu.Step();
             return cycles;
         }
