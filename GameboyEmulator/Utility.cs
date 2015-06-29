@@ -56,7 +56,8 @@ namespace GameboyEmulator
 
         public static bool IsBitSet(this byte b, int pos)
         {
-            return (b & (1 << pos)) != 0;
+            var r = (b & (1 << pos)) != 0;
+            return r;
         }
 
         public static byte BitSet(this byte b, int pos)
@@ -101,6 +102,12 @@ namespace GameboyEmulator
         }
 
         public static ushort Add(this byte b, ushort value)
+        {
+            var result = b + value;
+            return (ushort)result;
+        }
+
+        public static ushort Add(this sbyte b, ushort value)
         {
             var result = b + value;
             return (ushort)result;
