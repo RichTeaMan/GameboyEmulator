@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Reflection;
+using System.Diagnostics;
 
 namespace GameboyEmulator
 {
@@ -116,7 +117,12 @@ namespace GameboyEmulator
         public bool ZeroFlag
         {
             get { return RegF.IsBitSet(7); }
-            set { RegF.BitSet(7, value); }
+            set
+            {
+                RegF = RegF.BitSet(7, value);
+                if (ZeroFlag != value)
+                    throw new Exception("Zero Flag Setter failed.");
+            }
         }
 
         /// <summary>
@@ -169,15 +175,19 @@ namespace GameboyEmulator
             
             if(opCode == 0xCB)
             {
-                PC++;
-                var secondaryOpCode = Mmu.ReadByte(PC);
+                var secondaryOpCode = Mmu.ReadByte((ushort)(PC + 1));
                 opCode = Utility.CombineUShort(0xCB, secondaryOpCode);
             }
             CpuInstruction ins;
             if(Map.TryGetValue(opCode, out ins))
             {
-                int cycles = ins.Execute();
+                Debug.WriteLine("0x{0:X4}\t{1}", PC, ins.AssemblyInstruction);
                 PC++;
+                if(opCode > 256)
+                {
+                    PC++;
+                }
+                int cycles = ins.Execute();
                 return cycles;
             }
             else
@@ -3012,8 +3022,12 @@ namespace GameboyEmulator
         [Op(0x20, 12, "JR NZ")]
         void JR_NZ()
         {
+            var i = (sbyte)Mmu.ReadByte(PC);
+            PC++;
             if (!ZeroFlag)
-                JR_n();
+            {
+                PC = Utility.Add(i, PC);
+            }
         }
 
         [Op(0x28, 12, "JR Z")]
