@@ -6,8 +6,30 @@
         xmlns:local="clr-namespace:GameboyEmulator.Wpf"
         mc:Ignorable="d"
         Title="MainWindow" Height="350" Width="525">
-    <Grid>
-        <Image Name="GameArea" HorizontalAlignment="Left" Height="144" Margin="50,50,0,0" VerticalAlignment="Top" Width="160"/>
+    <Grid Background="{DynamicResource {x:Static SystemColors.ControlBrushKey}}">
+        <Border BorderThickness="1"
+        BorderBrush="#FF000000"
+                Height="145"
+                Width="167"
+                Margin="10,10,340,164">
+            <Image Name="GameArea" HorizontalAlignment="Left" Height="144" VerticalAlignment="Top" Width="160" />
+        </Border>
+        <Grid HorizontalAlignment="Left" Height="299" Margin="182,10,0,0" VerticalAlignment="Top" Width="325">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="*"></RowDefinition>
+                <RowDefinition Height="*"></RowDefinition>
+            </Grid.RowDefinitions>
+            <GroupBox Grid.Row="0" Header="Instructions" HorizontalAlignment="Left" Margin="10,10,0,0" VerticalAlignment="Top" Height="135" Width="305">
+                <TextBlock x:Name="ins_TextBlock" VerticalAlignment="Stretch" TextWrapping="Wrap" Height="auto" HorizontalAlignment="Stretch">
 
+                </TextBlock>
+            </GroupBox>
+
+            <GroupBox Grid.Row="1" x:Name="groupBox" Header="Registers" HorizontalAlignment="Left" Margin="10,10,0,0" VerticalAlignment="Top" Height="135" Width="305">
+                <TextBlock x:Name="registersTextBlock" VerticalAlignment="Stretch" TextWrapping="Wrap" Height="auto" HorizontalAlignment="Stretch">
+
+                </TextBlock>
+            </GroupBox>
+        </Grid>
     </Grid>
 </Window>
