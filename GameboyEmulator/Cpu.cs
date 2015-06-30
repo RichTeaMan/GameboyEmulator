@@ -162,6 +162,10 @@ namespace GameboyEmulator
 
         private Dictionary<int, CpuInstruction> Map;
 
+        public delegate void CpuInstructionHandler(Cpu sender, CpuInstruction instruction);
+        public event CpuInstructionHandler PreCpuInstructionEvent;
+        public event CpuInstructionHandler PostCpuInstructionEvent;
+
         public Cpu()
         {
             PC = 0;
@@ -186,12 +190,20 @@ namespace GameboyEmulator
             if(Map.TryGetValue(opCode, out ins))
             {
                 Debug.WriteLine("0x{0:X4}\t{1}", PC, ins.AssemblyInstruction);
+                if(PreCpuInstructionEvent != null)
+                {
+                    PreCpuInstructionEvent.Invoke(this, ins);
+                }
                 PC++;
                 if(opCode > 256)
                 {
                     PC++;
                 }
                 int cycles = ins.Execute();
+                if (PostCpuInstructionEvent != null)
+                {
+                    PostCpuInstructionEvent.Invoke(this, ins);
+                }
                 return cycles;
             }
             else
