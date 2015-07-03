@@ -1,6 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Diagnostics;
+using System.Drawing.Imaging;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading;
@@ -88,6 +91,8 @@ namespace GameboyEmulator.Wpf
             Gameboy.Begin();
         }
 
+        int frame = 0;
+
         private void Gameboy_DrawEvent(Gameboy sender, Pixel[] pixels, EventArgs e)
         {
             var bytes = new List<byte>();
@@ -97,6 +102,28 @@ namespace GameboyEmulator.Wpf
                 bytes.Add(p.G);
                 bytes.Add(p.B);
             }
+            
+
+            if (bytes.Any(b => b != 255))
+            {
+                int row = 0;
+                var sb = new StringBuilder();
+                sb.AppendLine("<html><body><table><tr>");
+                foreach(var p in pixels)
+                {
+                    var colour = string.Format("#{0}{1}{2}", p.R, p.G, p.B);
+                    sb.AppendLine(string.Format("<td style=\"width: 2px; height: 2px; background-color: {0}; ></td>", colour));
+                    if (row == 160)
+                    {
+                        sb.AppendLine("</tr><tr>");
+                    }
+                }
+                sb.AppendLine("</tr></table></body></html>");
+                File.WriteAllText(string.Format("Frame-{0}.html", frame), sb.ToString());
+                Debug.WriteLine(string.Format("Frame with content {0}", frame));
+            }
+
+            frame++;
 
             GameArea.Dispatcher.BeginInvoke((Action)(() =>
             {
