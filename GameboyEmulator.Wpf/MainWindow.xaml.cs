@@ -22,10 +22,11 @@ namespace GameboyEmulator.Wpf
     /// </summary>
     public partial class MainWindow : Window
     {
-        List<string> instructions { get; set; }
+        private List<string> instructions { get; set; }
         private WriteableBitmap bitmap { get; set; }
-        Gameboy Gameboy { get; set; }
-        Thread GameThread { get; set; }
+        private Gameboy Gameboy { get; set; }
+        private Thread GameThread { get; set; }
+        private int DebugDisplay { get; set; }
         public MainWindow()
         {
             InitializeComponent();
@@ -41,27 +42,33 @@ namespace GameboyEmulator.Wpf
 
         private void Cpu_PostCpuInstructionEvent(Cpu sender, CpuExecution execution)
         {
-            var sb = new StringBuilder();
-            AppendLine(sb, "RegA: {0:X2}\tRegB {1:X2}", Gameboy.Cpu.RegA, Gameboy.Cpu.RegB);
-            AppendLine(sb, "RegC: {0:X2}\tRegD {1:X2}", Gameboy.Cpu.RegC, Gameboy.Cpu.RegD);
-            AppendLine(sb, "RegE: {0:X2}\tRegF {1:X2}", Gameboy.Cpu.RegE, Gameboy.Cpu.RegF);
-            AppendLine(sb, "RegH: {0:X2}\tRegL {1:X2}", Gameboy.Cpu.RegH, Gameboy.Cpu.RegL);
-            AppendLine(sb, "PC: {0:X2}\tSP {1:X2}", Gameboy.Cpu.PC, Gameboy.Cpu.SP);
+            if (DebugDisplay % 20 == 0)
+            {
+                var sb = new StringBuilder();
+                AppendLine(sb, "RegA: {0:X2}\tRegB {1:X2}", Gameboy.Cpu.RegA, Gameboy.Cpu.RegB);
+                AppendLine(sb, "RegC: {0:X2}\tRegD {1:X2}", Gameboy.Cpu.RegC, Gameboy.Cpu.RegD);
+                AppendLine(sb, "RegE: {0:X2}\tRegF {1:X2}", Gameboy.Cpu.RegE, Gameboy.Cpu.RegF);
+                AppendLine(sb, "RegH: {0:X2}\tRegL {1:X2}", Gameboy.Cpu.RegH, Gameboy.Cpu.RegL);
+                AppendLine(sb, "PC: {0:X2}\tSP {1:X2}", Gameboy.Cpu.PC, Gameboy.Cpu.SP);
 
-            var display = sb.ToString();
+                var display = sb.ToString();
 
-            var insMessage = execution.ToString();
-            instructions.Add(insMessage);
-            var insDisplay = string.Join(Environment.NewLine, instructions.Reverse<string>());
+                var insMessage = execution.ToString();
+                instructions.Add(insMessage);
+                var insDisplay = string.Join(Environment.NewLine, instructions.Reverse<string>());
 
-            Dispatcher.Invoke((Action)(() => {
-                registersTextBlock.Text = display;
-            }));
+                Dispatcher.Invoke((Action)(() =>
+                {
+                    registersTextBlock.Text = display;
+                }));
 
-            Dispatcher.Invoke((Action)(() => {
+                Dispatcher.Invoke((Action)(() =>
+                {
 
-                ins_TextBlock.Text = insDisplay;
-            }));
+                    ins_TextBlock.Text = insDisplay;
+                }));
+            }
+            DebugDisplay++;
         }
 
         private StringBuilder AppendLine(StringBuilder sb, string message, params object[] args)
