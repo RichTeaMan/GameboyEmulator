@@ -3049,43 +3049,58 @@ namespace GameboyEmulator
             PC = address;
         }
 
+        ushort getJrJump()
+        {
+            var i = (sbyte)Mmu.ReadByte(PC);
+            PC++;
+            var jump = Utility.Add(i, PC);
+            return jump;
+        }
+
         [Op(0x18, 8, "JR +n")]
         void JR_n()
         {
-            var value = ReadByte();
-            PC += value;
+            PC = getJrJump();
         }
 
         [Op(0x20, 12, "JR NZ +n")]
         void JR_NZ()
         {
-            var i = (sbyte)Mmu.ReadByte(PC);
-            PC++;
+            var jump = getJrJump();
             if (!ZeroFlag)
             {
-                PC = Utility.Add(i, PC);
+                PC = jump;
             }
         }
 
         [Op(0x28, 12, "JR Z +n")]
         void JR_Z()
         {
+            var jump = getJrJump();
             if (ZeroFlag)
-                JR_n();
+            {
+                PC = jump;
+            }
         }
 
         [Op(0x30, 12, "JR NC +n")]
         void JR_NC()
         {
+            var jump = getJrJump();
             if (!CarryFlag)
-                JR_n();
+            {
+                PC = jump;
+            }
         }
 
         [Op(0x38, 12, "JR C n")]
         void JR_C()
         {
+            var jump = getJrJump();
             if (CarryFlag)
-                JR_n();
+            {
+                PC = jump;
+            }
         }
 
         #endregion
