@@ -33,13 +33,13 @@ namespace GameboyEmulator.Wpf
             bitmap = new WriteableBitmap(160, 144, 160 / 1.91, 140 / 1.71, PixelFormats.Rgb24, null);
             Gameboy = new Gameboy();
             Gameboy.DrawEvent += Gameboy_DrawEvent;
-            //Gameboy.Cpu.PostCpuInstructionEvent += Cpu_PostCpuInstructionEvent;
+            Gameboy.Cpu.PostCpuInstructionEvent += Cpu_PostCpuInstructionEvent;
             GameThread = new Thread(new ThreadStart(gameboyThread));
             GameThread.Start();
         }
         
 
-        private void Cpu_PostCpuInstructionEvent(Cpu sender, CpuInstruction instruction)
+        private void Cpu_PostCpuInstructionEvent(Cpu sender, CpuExecution execution)
         {
             var sb = new StringBuilder();
             AppendLine(sb, "RegA: {0:X2}\tRegB {1:X2}", Gameboy.Cpu.RegA, Gameboy.Cpu.RegB);
@@ -50,7 +50,7 @@ namespace GameboyEmulator.Wpf
 
             var display = sb.ToString();
 
-            var insMessage = instruction.ToString();
+            var insMessage = execution.ToString();
             instructions.Add(insMessage);
             var insDisplay = string.Join(Environment.NewLine, instructions.Reverse<string>());
 

@@ -163,8 +163,9 @@ namespace GameboyEmulator
         private Dictionary<int, CpuInstruction> Map;
 
         public delegate void CpuInstructionHandler(Cpu sender, CpuInstruction instruction);
+        public delegate void CpuExecutionHandler(Cpu sender, CpuExecution execution);
         public event CpuInstructionHandler PreCpuInstructionEvent;
-        public event CpuInstructionHandler PostCpuInstructionEvent;
+        public event CpuExecutionHandler PostCpuInstructionEvent;
 
         public Cpu()
         {
@@ -177,7 +178,7 @@ namespace GameboyEmulator
 
         #region Methods
 
-        public int Process()
+        public CpuExecution Process()
         {
             int opCode = Mmu.ReadByte(PC);
             
@@ -189,7 +190,7 @@ namespace GameboyEmulator
             CpuInstruction ins;
             if(Map.TryGetValue(opCode, out ins))
             {
-                Debug.WriteLine(ins);
+                
                 if(PreCpuInstructionEvent != null)
                 {
                     PreCpuInstructionEvent.Invoke(this, ins);
@@ -199,12 +200,13 @@ namespace GameboyEmulator
                 {
                     PC++;
                 }
-                int cycles = ins.Execute();
+                var execution = ins.Execute();
+                Debug.WriteLine(execution);
                 if (PostCpuInstructionEvent != null)
                 {
-                    PostCpuInstructionEvent.Invoke(this, ins);
+                    PostCpuInstructionEvent.Invoke(this, execution);
                 }
-                return cycles;
+                return execution;
             }
             else
             {
@@ -1187,8 +1189,7 @@ namespace GameboyEmulator
         [Op(0x21, 12, "LD HL nn")]
         void LD_HLnn()
         {
-            RegL = ReadByte();
-            RegH = ReadByte();       
+            HL = ReadWord();      
         }
 
         [Op(0x31, 12, "LD SP nn")]

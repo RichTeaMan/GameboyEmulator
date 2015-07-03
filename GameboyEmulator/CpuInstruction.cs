@@ -22,11 +22,12 @@ namespace GameboyEmulator
 
         public CpuInstruction() { }
 
-        public int Execute()
+        public CpuExecution Execute()
         {
+            var execution = new CpuExecution(this, Cpu.PC);
             MethodInfo.Invoke(Cpu, null);
             Cpu.Timer += Cycles;
-            return Cycles;
+            return execution;
         }
 
         public static CpuInstruction GetInstruction(Cpu cpu, MethodInfo methodInfo)
@@ -45,13 +46,6 @@ namespace GameboyEmulator
             };
 
             return cpuIns;
-        }
-
-        public override string ToString()
-        {
-            var text = createAssemblyText();
-            var str = string.Format("0x{0:X4}\t{1}", Cpu.PC, text);
-            return str;
         }
 
         private string createAssemblyText()

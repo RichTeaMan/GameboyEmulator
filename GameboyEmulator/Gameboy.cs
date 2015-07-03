@@ -57,7 +57,7 @@ namespace GameboyEmulator
                 ProcessEvent.Invoke(this, new EventArgs());
             }
 
-            int cycles = Cpu.Process();
+            int cycles = Cpu.Process().CpuInstruction.Cycles;
 
             if (Cpu.Ime == 1 && Mmu.InterruptEnabled > 0 && Mmu.InterruptFlag > 0)
             {
