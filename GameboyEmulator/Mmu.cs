@@ -265,6 +265,14 @@ namespace GameboyEmulator
             return false;
         }
 
+        public ushort ReadByte(int address)
+        {
+            if (address > ushort.MaxValue || address < ushort.MinValue)
+                throw new ArgumentOutOfRangeException(nameof(address));
+
+            return ReadByte((ushort)address);
+        }
+
         /// <summary>
         /// Read 8-bit byte from a given address.
         /// </summary>
@@ -298,6 +306,14 @@ namespace GameboyEmulator
                 }
             }
             return value.Value;
+        }
+
+        public ushort ReadWord(int address)
+        {
+            if (address > ushort.MaxValue || address < ushort.MinValue)
+                throw new ArgumentOutOfRangeException(nameof(address));
+
+            return ReadWord((ushort)address);
         }
 
         /// <summary>

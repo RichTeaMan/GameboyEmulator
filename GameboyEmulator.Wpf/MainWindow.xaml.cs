@@ -33,7 +33,7 @@ namespace GameboyEmulator.Wpf
             bitmap = new WriteableBitmap(160, 144, 160 / 1.91, 140 / 1.71, PixelFormats.Rgb24, null);
             Gameboy = new Gameboy();
             Gameboy.DrawEvent += Gameboy_DrawEvent;
-            Gameboy.Cpu.PostCpuInstructionEvent += Cpu_PostCpuInstructionEvent;
+            //Gameboy.Cpu.PostCpuInstructionEvent += Cpu_PostCpuInstructionEvent;
             GameThread = new Thread(new ThreadStart(gameboyThread));
             GameThread.Start();
         }
@@ -50,7 +50,7 @@ namespace GameboyEmulator.Wpf
 
             var display = sb.ToString();
 
-            var insMessage = string.Format("{0:X4}\t{1}", Gameboy.Cpu.PC, instruction.AssemblyInstruction);
+            var insMessage = instruction.ToString();
             instructions.Add(insMessage);
             var insDisplay = string.Join(Environment.NewLine, instructions.Reverse<string>());
 

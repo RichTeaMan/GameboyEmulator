@@ -189,7 +189,7 @@ namespace GameboyEmulator
             CpuInstruction ins;
             if(Map.TryGetValue(opCode, out ins))
             {
-                Debug.WriteLine("0x{0:X4}\t{1}", PC, ins.AssemblyInstruction);
+                Debug.WriteLine(ins);
                 if(PreCpuInstructionEvent != null)
                 {
                     PreCpuInstructionEvent.Invoke(this, ins);
@@ -269,7 +269,7 @@ namespace GameboyEmulator
             return b;
         }
 
-        byte PeekByte()
+        public byte PeekByte()
         {
             var b = Mmu.ReadByte(PC);
             return b;
@@ -283,7 +283,7 @@ namespace GameboyEmulator
             return b;
         }
 
-        ushort PeekWord()
+        public ushort PeekWord()
         {
             var b = Mmu.ReadWord(PC);
             return b;
@@ -628,42 +628,42 @@ namespace GameboyEmulator
 
         #region LD
 
-        [Op(0x06, 8, "LD B {0}")]
+        [Op(0x06, 8, "LD B n")]
         void LD_Bn()
         {
             var value = ReadByte();
             RegB = value;
         }
 
-        [Op(0x0E, 8, "LD C {0}")]
+        [Op(0x0E, 8, "LD C n")]
         void LD_Cn()
         {
             var value = ReadByte();
             RegC = value;
         }
 
-        [Op(0x16, 8, "LD D {0}")]
+        [Op(0x16, 8, "LD D n")]
         void LD_Dn()
         {
             var value = ReadByte();
             RegD = value;
         }
 
-        [Op(0x1E, 8, "LD E {0}")]
+        [Op(0x1E, 8, "LD E n")]
         void LD_En()
         {
             var value = ReadByte();
             RegE = value;
         }
 
-        [Op(0x26, 8, "LD H {0}")]
+        [Op(0x26, 8, "LD H n")]
         void LD_Hn()
         {
             var value = ReadByte();
             RegH = value;
         }
 
-        [Op(0x2E, 8, "LD L {0}")]
+        [Op(0x2E, 8, "LD L n")]
         void LD_Ln()
         {
             var value = ReadByte();
@@ -1013,7 +1013,7 @@ namespace GameboyEmulator
             Mmu.WriteByte(HL, RegL);
         }
 
-        [Op(0x36, 12, "LD HL {0}")]
+        [Op(0x36, 12, "LD HL n")]
         void LD_HLn()
         {
             var value = ReadByte();
@@ -1042,7 +1042,7 @@ namespace GameboyEmulator
             RegA = value;
         }
 
-        [Op(0x3E, 8, "LD A {0}")]
+        [Op(0x3E, 8, "LD A n")]
         void LD_An()
         {
             var value = ReadByte();
@@ -2888,56 +2888,56 @@ namespace GameboyEmulator
             TestBit(7, RegA);
         }
 
-        [CbOp(0xC7, 8, "SET {0} A")]
+        [CbOp(0xC7, 8, "SET n A")]
         void SET_bA()
         {
             var bit = ReadByte();
             SetBit(bit, RegA);
         }
 
-        [CbOp(0xC0, 8, "SET {0} B")]
+        [CbOp(0xC0, 8, "SET n B")]
         void SET_bB()
         {
             var bit = ReadByte();
             SetBit(bit, RegB);
         }
 
-        [CbOp(0xC1, 8, "SET {0} C ")]
+        [CbOp(0xC1, 8, "SET n C ")]
         void SET_bC()
         {
             var bit = ReadByte();
             SetBit(bit, RegC);
         }
 
-        [CbOp(0xC2, 8, "SET {0} D")]
+        [CbOp(0xC2, 8, "SET n D")]
         void SET_bD()
         {
             var bit = ReadByte();
             SetBit(bit, RegD);
         }
 
-        [CbOp(0xC3, 8, "SET {0} E")]
+        [CbOp(0xC3, 8, "SET n E")]
         void SET_bE()
         {
             var bit = ReadByte();
             SetBit(bit, RegE);
         }
 
-        [CbOp(0xC4, 8, "SET {0} H")]
+        [CbOp(0xC4, 8, "SET n H")]
         void SET_bH()
         {
             var bit = ReadByte();
             SetBit(bit, RegH);
         }
 
-        [CbOp(0xC5, 8, "SET {0} L")]
+        [CbOp(0xC5, 8, "SET n L")]
         void SET_bL()
         {
             var bit = ReadByte();
             SetBit(bit, RegL);
         }
 
-        [CbOp(0xC6, 16, "SET {0} (HL)")]
+        [CbOp(0xC6, 16, "SET n (HL)")]
         void SET_bHL()
         {
             var bit = ReadByte();
@@ -2945,56 +2945,56 @@ namespace GameboyEmulator
             SetBit(bit, value);
         }
 
-        [CbOp(0x87, 8, "RES {0} A")]
+        [CbOp(0x87, 8, "RES n A")]
         void RES_bA()
         {
             var bit = ReadByte();
             ResetBit(bit, RegA);
         }
 
-        [CbOp(0x80, 8, "RES {0} B")]
+        [CbOp(0x80, 8, "RES n B")]
         void RES_bB()
         {
             var bit = ReadByte();
             ResetBit(bit, RegB);
         }
 
-        [CbOp(0x81, 8, "RES {0} C ")]
+        [CbOp(0x81, 8, "RES n C ")]
         void RES_bC()
         {
             var bit = ReadByte();
             ResetBit(bit, RegC);
         }
 
-        [CbOp(0x82, 8, "RES {0} D")]
+        [CbOp(0x82, 8, "RES n D")]
         void RES_bD()
         {
             var bit = ReadByte();
             ResetBit(bit, RegD);
         }
 
-        [CbOp(0x83, 8, "RES {0} E")]
+        [CbOp(0x83, 8, "RES n E")]
         void RES_bE()
         {
             var bit = ReadByte();
             ResetBit(bit, RegE);
         }
 
-        [CbOp(0x84, 8, "RES {0} H")]
+        [CbOp(0x84, 8, "RES n H")]
         void RES_bH()
         {
             var bit = ReadByte();
             ResetBit(bit, RegH);
         }
 
-        [CbOp(0x85, 8, "RES {0} L")]
+        [CbOp(0x85, 8, "RES n L")]
         void RES_bL()
         {
             var bit = ReadByte();
             ResetBit(bit, RegL);
         }
 
-        [CbOp(0x86, 16, "RES {0} (HL)")]
+        [CbOp(0x86, 16, "RES n (HL)")]
         void RES_bHL()
         {
             var bit = ReadByte();
