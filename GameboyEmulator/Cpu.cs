@@ -106,12 +106,12 @@ namespace GameboyEmulator
         /// Gets the Program Counter.
         /// </summary>
         /// <returns></returns>
-        public ushort PC { get; protected set; }
+        public ushort PC { get; set; }
         /// <summary>
         /// Gets the Stack Pointer.
         /// </summary>
         /// <returns></returns>
-        public ushort SP { get; protected set; }
+        public ushort SP { get; set; }
 
         /// <summary>
         /// Gets or sets the Zero flag (0x80). True if the last operation produced a result of 0.
@@ -194,11 +194,6 @@ namespace GameboyEmulator
                 if(PreCpuInstructionEvent != null)
                 {
                     PreCpuInstructionEvent.Invoke(this, ins);
-                }
-                PC++;
-                if(opCode > 256)
-                {
-                    PC++;
                 }
                 var execution = ins.Execute();
                 Debug.WriteLine(execution);

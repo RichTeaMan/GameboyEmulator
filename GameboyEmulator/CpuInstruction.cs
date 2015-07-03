@@ -11,20 +11,27 @@ namespace GameboyEmulator
     public class CpuInstruction
     {
         public int OpCode { get; private set; }
+        public ushort InstructionSize
+        {
+            get
+            {
+                if (OpCode > 256)
+                    return 2;
+                else
+                    return 1;
+            }
+        }
         public int Cycles { get; private set; }
         public MethodInfo MethodInfo { get; private set; }
         public Cpu Cpu { get; private set; }
         public string AssemblyInstruction { get; private set; }
-        /// <summary>
-        /// Gets the program counter of the cpu when this instruction was created.
-        /// </summary>
-        public int PC { get; private set; }
 
         public CpuInstruction() { }
 
         public CpuExecution Execute()
         {
             var execution = new CpuExecution(this, Cpu.PC);
+            Cpu.PC += InstructionSize;
             MethodInfo.Invoke(Cpu, null);
             Cpu.Timer += Cycles;
             return execution;
@@ -42,27 +49,9 @@ namespace GameboyEmulator
                 OpCode = opAttr.OpCode,
                 Cpu = cpu,
                 AssemblyInstruction = opAttr.AssemblyInstruction,
-                PC = cpu.PC,
             };
 
             return cpuIns;
-        }
-
-        private string createAssemblyText()
-        {
-            string assTxt = AssemblyInstruction;
-            if(assTxt.Contains("nn"))
-            {
-                var word = string.Format("$0x{0:X4}", Cpu.Mmu.ReadWord(PC + 1));
-                assTxt = assTxt.Replace("nn", word);
-            }
-            if(assTxt.Contains("n"))
-            {
-                var byt = string.Format("$0x{0:X2}", Cpu.Mmu.ReadByte(PC + 1));
-                assTxt = assTxt.Replace("n", byt);
-            }
-
-            return assTxt;
         }
     }
 }
