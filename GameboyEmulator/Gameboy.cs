@@ -18,6 +18,8 @@ namespace GameboyEmulator
         public Mmu Mmu { get; private set; }
         public Gpu Gpu { get; private set; }
 
+        public bool Paused { get; set; }
+
         public Gameboy()
         {
             Cpu = new Cpu();
@@ -42,10 +44,17 @@ namespace GameboyEmulator
         {
             while(true)
             {
-                int cycles = Process();
+                if (Paused)
+                {
+                    Task.Delay(1000);
+                }
+                else
+                {
+                    int cycles = Process();
 
-                // much too slow
-                Task.Delay(cycles * 1);
+                    // much too slow
+                    Task.Delay(cycles * 1);
+                }
             }
             
         }

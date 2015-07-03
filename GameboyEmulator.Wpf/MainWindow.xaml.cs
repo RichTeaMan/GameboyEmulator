@@ -22,7 +22,7 @@ namespace GameboyEmulator.Wpf
     /// </summary>
     public partial class MainWindow : Window
     {
-        private List<string> instructions { get; set; }
+        private List<CpuExecution> instructions { get; set; }
         private WriteableBitmap bitmap { get; set; }
         private Gameboy Gameboy { get; set; }
         private Thread GameThread { get; set; }
@@ -30,7 +30,7 @@ namespace GameboyEmulator.Wpf
         public MainWindow()
         {
             InitializeComponent();
-            instructions = new List<string>();
+            instructions = new List<CpuExecution>();
             bitmap = new WriteableBitmap(160, 144, 160 / 1.91, 140 / 1.71, PixelFormats.Rgb24, null);
             Gameboy = new Gameboy();
             Gameboy.DrawEvent += Gameboy_DrawEvent;
@@ -42,33 +42,37 @@ namespace GameboyEmulator.Wpf
 
         private void Cpu_PostCpuInstructionEvent(Cpu sender, CpuExecution execution)
         {
-            if (DebugDisplay % 20 == 0)
-            {
-                var sb = new StringBuilder();
-                AppendLine(sb, "RegA: {0:X2}\tRegB {1:X2}", Gameboy.Cpu.RegA, Gameboy.Cpu.RegB);
-                AppendLine(sb, "RegC: {0:X2}\tRegD {1:X2}", Gameboy.Cpu.RegC, Gameboy.Cpu.RegD);
-                AppendLine(sb, "RegE: {0:X2}\tRegF {1:X2}", Gameboy.Cpu.RegE, Gameboy.Cpu.RegF);
-                AppendLine(sb, "RegH: {0:X2}\tRegL {1:X2}", Gameboy.Cpu.RegH, Gameboy.Cpu.RegL);
-                AppendLine(sb, "PC: {0:X2}\tSP {1:X2}", Gameboy.Cpu.PC, Gameboy.Cpu.SP);
-
-                var display = sb.ToString();
-
-                var insMessage = execution.ToString();
-                instructions.Add(insMessage);
-                var insDisplay = string.Join(Environment.NewLine, instructions.Reverse<string>());
-
-                Dispatcher.Invoke((Action)(() =>
-                {
-                    registersTextBlock.Text = display;
-                }));
-
-                Dispatcher.Invoke((Action)(() =>
-                {
-
-                    ins_TextBlock.Text = insDisplay;
-                }));
-            }
+            instructions.Add(execution);
+            //if (DebugDisplay % 100 == 0)
+            //{
+            //    RefreshDebug();
+            //}
             DebugDisplay++;
+        }
+
+        private void RefreshDebug()
+        {
+            var sb = new StringBuilder();
+            AppendLine(sb, "RegA: {0:X2}\tRegB {1:X2}", Gameboy.Cpu.RegA, Gameboy.Cpu.RegB);
+            AppendLine(sb, "RegC: {0:X2}\tRegD {1:X2}", Gameboy.Cpu.RegC, Gameboy.Cpu.RegD);
+            AppendLine(sb, "RegE: {0:X2}\tRegF {1:X2}", Gameboy.Cpu.RegE, Gameboy.Cpu.RegF);
+            AppendLine(sb, "RegH: {0:X2}\tRegL {1:X2}", Gameboy.Cpu.RegH, Gameboy.Cpu.RegL);
+            AppendLine(sb, "PC: {0:X4}\tSP {1:X4}", Gameboy.Cpu.PC, Gameboy.Cpu.SP);
+
+            var display = sb.ToString();
+
+            var insDisplay = string.Join(Environment.NewLine, instructions.Select(i => i.ToString()));
+
+            Dispatcher.Invoke((Action)(() =>
+            {
+                registersTextBlock.Text = display;
+            }));
+
+            Dispatcher.Invoke((Action)(() =>
+            {
+                ins_TextBlock.Text = insDisplay;
+
+            }));
         }
 
         private StringBuilder AppendLine(StringBuilder sb, string message, params object[] args)
@@ -107,6 +111,20 @@ namespace GameboyEmulator.Wpf
         protected override void OnClosing(CancelEventArgs e)
         {
             //GameThread.Join();
+        }
+
+        private void pause_Btn_Click(object sender, RoutedEventArgs e)
+        {
+            Gameboy.Paused = !Gameboy.Paused;
+            if (Gameboy.Paused)
+            {
+                pause_Btn.Content = "Unpause";
+                RefreshDebug();
+            }
+            else
+            {
+                pause_Btn.Content = "Pause";
+            }
         }
     }
 }
