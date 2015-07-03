@@ -3049,14 +3049,14 @@ namespace GameboyEmulator
             PC = address;
         }
 
-        [Op(0x18, 8, "JR n")]
+        [Op(0x18, 8, "JR +n")]
         void JR_n()
         {
             var value = ReadByte();
             PC += value;
         }
 
-        [Op(0x20, 12, "JR NZ")]
+        [Op(0x20, 12, "JR NZ +n")]
         void JR_NZ()
         {
             var i = (sbyte)Mmu.ReadByte(PC);
@@ -3067,21 +3067,21 @@ namespace GameboyEmulator
             }
         }
 
-        [Op(0x28, 12, "JR Z")]
+        [Op(0x28, 12, "JR Z +n")]
         void JR_Z()
         {
             if (ZeroFlag)
                 JR_n();
         }
 
-        [Op(0x30, 12, "JR NC")]
+        [Op(0x30, 12, "JR NC +n")]
         void JR_NC()
         {
             if (!CarryFlag)
                 JR_n();
         }
 
-        [Op(0x38, 12, "JR C")]
+        [Op(0x38, 12, "JR C n")]
         void JR_C()
         {
             if (CarryFlag)
