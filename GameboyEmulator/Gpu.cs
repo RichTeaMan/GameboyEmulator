@@ -83,7 +83,7 @@ namespace GameboyEmulator
                         Line++;
                         Cpu.Mmu.VblankIntFlag = true;
 
-                        if (Line == 143)
+                        if (Line == 144)
                         {
                             // Enter vblank
                             Mode = 1;
