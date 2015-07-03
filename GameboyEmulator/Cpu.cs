@@ -1152,14 +1152,14 @@ namespace GameboyEmulator
             HL++;
         }
 
-        [Op(0xE0, 12, "LD nn+FF00 A")]
+        [Op(0xE0, 12, "LD n+FF00 A")]
         void LD_nn_FF00_A()
         {
             var addr = ReadByte().Add(P1);
             Mmu.WriteByte(addr, RegA);
         }
 
-        [Op(0xF0, 12, "LD A (nn+FF00)")]
+        [Op(0xF0, 12, "LD A (n+FF00)")]
         void LD_Ann_FF00()
         {
             var addr = ReadByte().Add(P1);
