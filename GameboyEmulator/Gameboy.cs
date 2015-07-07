@@ -102,7 +102,7 @@ namespace GameboyEmulator
                 // Mask off ints that aren't enabled
                 var ifired = Mmu.InterruptEnabled & Mmu.InterruptFlag;
 
-                if ((ifired & 0x01) == 1)
+                if ((ifired & 0x01) > 0)
                 {
                     Mmu.InterruptFlag &= (255 - 0x01);
                     Cpu.RST40();

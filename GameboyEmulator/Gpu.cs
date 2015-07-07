@@ -78,7 +78,7 @@ namespace GameboyEmulator
                                 DrawEvent.Invoke(this, _scrndata, new EventArgs());
                             }
                             Cpu.Mmu.VblankIntFlag = true;
-                            if ((ints & 2) == 1)
+                            if ((ints & 2) > 0)
                             {
                                 intfired |= 2;
                                 Cpu.Mmu.LcdStatIntFlag = true;
@@ -87,7 +87,7 @@ namespace GameboyEmulator
                         else
                         {
                             Mode = 2;
-                            if ((ints & 4)  == 1)
+                            if ((ints & 4)  > 0)
                             {
                                 intfired |= 4;
                                 Cpu.Mmu.LcdStatIntFlag = true;
@@ -96,7 +96,7 @@ namespace GameboyEmulator
                         _curline++;
                         if (_curline == _raster)
                         {
-                            if ((ints & 8) == 1)
+                            if ((ints & 8) > 0)
                             {
                                 intfired |= 8;
                                 Cpu.Mmu.LcdStatIntFlag = true;
@@ -119,7 +119,7 @@ namespace GameboyEmulator
                             _curscan = 0;
                             Mode = 2;
                         }
-                        if ((ints & 4) == 1)
+                        if ((ints & 4) > 0)
                         {
                             intfired |= 4;
                             Cpu.Mmu.LcdStatIntFlag = true;
@@ -143,7 +143,7 @@ namespace GameboyEmulator
                     {
                         ModeClock = 0;
                         Mode = 0;
-                        if ((ints & 1) == 1)
+                        if ((ints & 1) > 0)
                         {
                             intfired |= 1;
                             Cpu.Mmu.LcdStatIntFlag = true;
@@ -334,10 +334,10 @@ namespace GameboyEmulator
 
                     // Options
                     case 3:
-                        _objdata[obj].Palette = (val & 0x10) == 1;
-                        _objdata[obj].XFlip = (val & 0x20) == 1;
-                        _objdata[obj].YFlip = (val & 0x40) == 1;
-                        _objdata[obj].Prio = (val & 0x80) == 1;
+                        _objdata[obj].Palette = (val & 0x10) > 0;
+                        _objdata[obj].XFlip = (val & 0x20) > 0;
+                        _objdata[obj].YFlip = (val & 0x40) > 0;
+                        _objdata[obj].Prio = (val & 0x80) > 0;
                         break;
                 }
             }
@@ -401,7 +401,7 @@ namespace GameboyEmulator
                 // Find bit index for this pixel
                 sx = 1 << (7 - x);
 
-                var v = (((Vram[addr] & sx) == 1) ? 1 : 0) + (((Vram[addr + 1] & sx) == 1) ? 2 : 0);
+                var v = (((Vram[addr] & sx) > 0) ? 1 : 0) + (((Vram[addr + 1] & sx) > 0) ? 2 : 0);
                 // Update tile set
                 Tileset[tile][y][x] = (byte)v;
             }
