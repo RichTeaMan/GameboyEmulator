@@ -265,7 +265,7 @@ namespace GameboyEmulator
             return false;
         }
 
-        public ushort ReadByte(int address)
+        public byte ReadByte(int address)
         {
             if (address > ushort.MaxValue || address < ushort.MinValue)
                 throw new ArgumentOutOfRangeException(nameof(address));
