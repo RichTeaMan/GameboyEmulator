@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics;
-using System.Drawing.Imaging;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -41,7 +40,7 @@ namespace GameboyEmulator.Wpf
             GameThread = new Thread(new ThreadStart(gameboyThread));
             GameThread.Start();
         }
-        
+
 
         private void Cpu_PostCpuInstructionEvent(Cpu sender, CpuExecution execution)
         {
@@ -64,7 +63,8 @@ namespace GameboyEmulator.Wpf
 
             var display = sb.ToString();
 
-            var insDisplay = string.Join(Environment.NewLine, instructions.Select(i => i.ToString()));
+            var ins = instructions.Skip(instructions.Count() - 100).Select(i => i.ToString());
+            var insDisplay = string.Join(Environment.NewLine, ins);
 
             Dispatcher.Invoke((Action)(() =>
             {
@@ -102,14 +102,14 @@ namespace GameboyEmulator.Wpf
                 bytes.Add(p.G);
                 bytes.Add(p.B);
             }
-            
+
 
             if (bytes.Any(b => b != 255))
             {
                 int row = 0;
                 var sb = new StringBuilder();
                 sb.AppendLine("<html><body><table><tr>");
-                foreach(var p in pixels)
+                foreach (var p in pixels)
                 {
                     var colour = string.Format("#{0}{1}{2}", p.R, p.G, p.B);
                     sb.AppendLine(string.Format("<td style=\"width: 2px; height: 2px; background-color: {0}; ></td>", colour));
