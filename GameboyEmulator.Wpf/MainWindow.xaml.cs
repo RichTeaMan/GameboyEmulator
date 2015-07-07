@@ -142,11 +142,14 @@ namespace GameboyEmulator.Wpf
 
         private void pause_Btn_Click(object sender, RoutedEventArgs e)
         {
-            Gameboy.Paused = !Gameboy.Paused;
+            Gameboy.Pause(!Gameboy.Paused);
             if (Gameboy.Paused)
             {
                 pause_Btn.Content = "Unpause";
                 RefreshDebug();
+                var memView = new MemoryView();
+                memView.Refresh(Gameboy);
+                memView.Show();
             }
             else
             {
