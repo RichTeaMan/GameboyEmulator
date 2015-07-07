@@ -196,7 +196,6 @@ namespace GameboyEmulator
                     PreCpuInstructionEvent.Invoke(this, ins);
                 }
                 var execution = ins.Execute();
-                Debug.WriteLine(execution);
                 if (PostCpuInstructionEvent != null)
                 {
                     PostCpuInstructionEvent.Invoke(this, execution);
