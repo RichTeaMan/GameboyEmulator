@@ -87,7 +87,7 @@ namespace GameboyEmulator.Wpf
 
         private async void gameboyThread()
         {
-            await Gameboy.Mmu.ReadRom(@"C:\Users\Thomas\Source\Repos\GameboyEmulator\GameboyEmulator.Wpf\Tetris.gb");
+            await Gameboy.Mmu.ReadRom(@"..\..\Tetris.gb");
             Gameboy.Begin();
         }
 
