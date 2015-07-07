@@ -158,25 +158,25 @@ namespace GameboyEmulator
                                 var y = (_curline + _yscrl) & 7;
                                 var x = _xscrl & 7;
                                 var t = (_xscrl >> 3) & 31;
-                                //var pixel;
                                 var w = 160;
 
                                 if (BgSwitch)
                                 {
-                                    var tile = Vram[mapbase + t];
+                                    int tile = Vram[mapbase + t];
                                     //if (tile < 128) tile = 256 + tile;
                                     var tilerow = Tileset[tile][y];
                                     do
                                     {
-                                        _scanrow[159 - x] = tilerow[x];                                        
-                                        _scrndata[linebase + 3] = Palette.bg[tilerow[x]];
+                                        _scanrow[159 - x] = tilerow[x];
+                                        var b = Palette.bg[tilerow[x]];
+                                        _scrndata[linebase + 3] = b;
                                         x++;
                                         if (x == 8)
                                         {
                                             t = (t + 1) & 31;
                                             x = 0;
                                             tile = Vram[mapbase + t];
-                                            // if (tile < 128) tile = 256 + tile;
+                                            //if (tile < 128) tile = 256 + tile;
                                             tilerow = Tileset[tile][y];
                                         }
                                         linebase += 4;
@@ -188,7 +188,8 @@ namespace GameboyEmulator
                                     do
                                     {
                                         _scanrow[159 - x] = tilerow[x];
-                                        _scrndata[linebase + 3] = Palette.bg[tilerow[x]];
+                                        var b = Palette.bg[tilerow[x]];
+                                        _scrndata[linebase + 3] = b;
                                         x++;
                                         if (x == 8) { t = (t + 1) & 31; x = 0; tilerow = Tileset[Vram[mapbase + t]][y]; }
                                         linebase += 4;
@@ -272,6 +273,12 @@ namespace GameboyEmulator
         {
             _scanrow = new byte[160];
             _scrndata = new byte[160 * 144 * 4];
+
+            for(int i = 0; i < _scrndata.Length; i++)
+            {
+                _scrndata[i] = 255;
+            }
+
             if (DrawEvent != null)
             {
                 DrawEvent.Invoke(this, _scrndata, new EventArgs());
@@ -379,31 +386,20 @@ namespace GameboyEmulator
             //});
         }
 
-        // Takes a value written to VRAM, and updates the
-        // internal tile data set
         public void UpdateTile(int addr, byte val)
         {
-            // Get the "base address" for this tile row
-            addr &= 0x1FFE;
-
-            // Work out which tile and row was updated
+            var saddr = addr;
+            if ((addr & 1) > 0)
+            {
+                saddr--;
+                addr--;
+            }
             var tile = (addr >> 4) & 511;
             var y = (addr >> 1) & 7;
-
-            // may not be good
-            if(tile >= 512)
-            {
-                return;
-            }
-            int sx;
             for (var x = 0; x < 8; x++)
             {
-                // Find bit index for this pixel
-                sx = 1 << (7 - x);
-
-                var v = (((Vram[addr] & sx) > 0) ? 1 : 0) + (((Vram[addr + 1] & sx) > 0) ? 2 : 0);
-                // Update tile set
-                Tileset[tile][y][x] = (byte)v;
+                var sx = 1 << (7 - x);
+                Tileset[tile][y][x] = (byte)(((Vram[saddr] & sx) > 0 ? 1 : 0) | ((Vram[saddr + 1] & sx) > 0 ? 2 : 0));
             }
         }
 
