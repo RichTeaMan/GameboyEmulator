@@ -56,7 +56,7 @@ namespace GameboyEmulator
             Paused = pause;
             while(isPaused != Paused)
             {
-                Task.Delay(10);
+                Task.Delay(10).Wait();
             }
         }
 
