@@ -42,29 +42,41 @@ namespace GameboyEmulator
 
         public byte InterruptFlag { get; set; }
 
+        /// <summary>
+        /// 0000 0001
+        /// </summary>
         public bool VblankIntFlag
         {
             get { return InterruptFlag.IsBitSet(0); }
             set { InterruptFlag = InterruptFlag.BitSet(0, value); }
         }
+        /// <summary>
+        /// 0000 0010
+        /// </summary>
         public bool LcdStatIntFlag
         {
             get { return InterruptFlag.IsBitSet(1); }
             set { InterruptFlag = InterruptFlag.BitSet(1, value); }
         }
-
+        /// <summary>
+        /// 0000 0100
+        /// </summary>
         public bool TimerIntFlag
         {
             get { return InterruptFlag.IsBitSet(2); }
             set { InterruptFlag = InterruptFlag.BitSet(2, value); }
         }
-
+        /// <summary>
+        /// 0000 1000
+        /// </summary>
         public bool SerialIntFlag
         {
             get { return InterruptFlag.IsBitSet(3); }
             set { InterruptFlag = InterruptFlag.BitSet(3, value); }
         }
-
+        /// <summary>
+        /// 0001 0000
+        /// </summary>
         public bool JoypadIntFlag
         {
             get { return InterruptFlag.IsBitSet(4); }
@@ -72,30 +84,41 @@ namespace GameboyEmulator
         }
 
         public byte InterruptEnabled { get; set; }
-
+        /// <summary>
+        /// 0000 0001
+        /// </summary>
         public bool VblankIntEnabled
         {
             get { return InterruptEnabled.IsBitSet(0); }
             set { InterruptEnabled = InterruptEnabled.BitSet(0, value); }
         }
+        /// <summary>
+        /// 0000 0010
+        /// </summary>
         public bool LcdStatIntEnabled
         {
             get { return InterruptEnabled.IsBitSet(1); }
             set { InterruptEnabled = InterruptEnabled.BitSet(1, value); }
         }
-
+        /// <summary>
+        /// 0000 0100
+        /// </summary>
         public bool TimerIntEnabled
         {
             get { return InterruptEnabled.IsBitSet(2); }
             set { InterruptEnabled = InterruptEnabled.BitSet(2, value); }
         }
-
+        /// <summary>
+        /// 0000 1000
+        /// </summary>
         public bool SerialIntEnabled
         {
             get { return InterruptEnabled.IsBitSet(3); }
             set { InterruptEnabled = InterruptEnabled.BitSet(3, value); }
         }
-
+        /// <summary>
+        /// 0001 0000
+        /// </summary>
         public bool JoypadIntEnabled
         {
             get { return InterruptEnabled.IsBitSet(4); }
