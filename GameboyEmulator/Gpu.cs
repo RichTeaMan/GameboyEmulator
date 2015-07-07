@@ -11,27 +11,22 @@ namespace GameboyEmulator
         public Cpu Cpu { get; private set; }
         public byte[] Vram { get; private set; }
 
-        public int Mode { get; private set; }
+        public byte Mode { get; private set; } = 2;
         public int ModeClock { get; private set; }
-        public byte Line { get; private set; }
         public byte[][][] Tileset { get; private set; }
-
-        public Pixel[] Screen { get; set; }
+        
         public bool BgSwitch { get; private set; }
         public bool ObjSwitch { get; private set; }
-        public bool BgMap { get; private set; }
-        public bool BgTile { get; private set; }
+        public bool _winon { get; private set; }
         public bool LcdSwitch { get; private set; }
-
-        public byte ScreenY { get; private set; }
-        public byte ScreenX { get; private set; }
 
         public Palette Palette { get; private set; }
 
         public byte[] _oam { get; private set; }
         public SpriteObjData[] _objdata { get; private set; }
+        public SpriteObjData[] _objdatasorted { get; private set; }
 
-        public delegate void DrawEventHandler(Gpu sender, Pixel[] pixels, EventArgs e);
+        public delegate void DrawEventHandler(Gpu sender, byte[] screenData, EventArgs e);
         public event DrawEventHandler DrawEvent;
 
         public Gpu(Cpu cpu)
@@ -39,253 +34,254 @@ namespace GameboyEmulator
             Cpu = cpu;
             Vram = Cpu.Mmu.Vram;
             Palette = new Palette();
-
+            
             Reset();
         }
 
-        public void Step()
+        byte _curline = 0;
+        int _curscan = 0;
+        byte _raster = 0;
+
+        byte _yscrl= 0;
+        byte _xscrl = 0;
+        byte _winy = 0;
+        byte _winx = 0;
+
+        int _objsize = 0;
+
+        int _bgtilebase = 0x0000;
+        int _bgmapbase = 0x1800;
+        int _winmapbase = 0x1800;
+
+        byte[] _scanrow;
+
+        byte[] _scrndata;
+
+        byte ints = 0;
+        byte intfired = 0;
+
+        public void Step(int cycles)
         {
-
-            ModeClock += Cpu.Timer;
-
+            ModeClock += cycles;
             switch (Mode)
             {
-                // OAM read mode, scanline active
-                case 2:
-                    if (ModeClock >= 80)
+                // In hblank
+                case 0:
+                    if (ModeClock >= 51)
                     {
-                        // Enter scanline mode 3
+                        // End of hblank for last scanline; render screen
+                        if (_curline == 143)
+                        {
+                            Mode = 1;
+                            if (DrawEvent != null)
+                            {
+                                DrawEvent.Invoke(this, _scrndata, new EventArgs());
+                            }
+                            Cpu.Mmu.VblankIntFlag = true;
+                            if ((ints & 2) == 1)
+                            {
+                                intfired |= 2;
+                                Cpu.Mmu.LcdStatIntFlag = true;
+                            }
+                        }
+                        else
+                        {
+                            Mode = 2;
+                            if ((ints & 4)  == 1)
+                            {
+                                intfired |= 4;
+                                Cpu.Mmu.LcdStatIntFlag = true;
+                            }
+                        }
+                        _curline++;
+                        if (_curline == _raster)
+                        {
+                            if ((ints & 8) == 1)
+                            {
+                                intfired |= 8;
+                                Cpu.Mmu.LcdStatIntFlag = true;
+                            }
+                        }
+                        _curscan += 640;
+                        ModeClock = 0;
+                    }
+                    break;
+
+                // In vblank
+                case 1:
+                    if (ModeClock >= 114)
+                    {
+                        ModeClock = 0;
+                        _curline++;
+                        if (_curline > 153)
+                        {
+                            _curline = 0;
+                            _curscan = 0;
+                            Mode = 2;
+                        }
+                        if ((ints & 4) == 1)
+                        {
+                            intfired |= 4;
+                            Cpu.Mmu.LcdStatIntFlag = true;
+                        }
+                    }
+                    break;
+
+                // In OAM-read mode
+                case 2:
+                    if (ModeClock >= 20)
+                    {
                         ModeClock = 0;
                         Mode = 3;
                     }
                     break;
 
-                // VRAM read mode, scanline active
-                // Treat end of mode 3 as end of scanline
+                // In VRAM-read mode
                 case 3:
-                    if (ModeClock >= 172)
+                    // Render scanline at end of allotted time
+                    if (ModeClock >= 43)
                     {
-                        // Enter hblank
                         ModeClock = 0;
                         Mode = 0;
-
-                        // Write a scanline to the framebuffer
-                        RenderScan();
-                    }
-                    break;
-
-                // Hblank
-                // After the last hblank, push the screen data to canvas
-                case 0:
-                    if (ModeClock >= 204)
-                    {
-                        ModeClock = 0;
-                        Line++;
-                        Cpu.Mmu.VblankIntFlag = true;
-
-                        if (Line == 144)
+                        if ((ints & 1) == 1)
                         {
-                            // Enter vblank
-                            Mode = 1;
-
-                            if (DrawEvent != null)
-                            {
-                                DrawEvent.Invoke(this, Screen, new EventArgs());
-                            }
+                            intfired |= 1;
                             Cpu.Mmu.LcdStatIntFlag = true;
-                            Cpu.Mmu.VblankIntFlag = true;
-                        }
-                        else
-                        {
-                            Mode = 2;
-                        }
-                    }
-                    break;
-
-                // Vblank (10 lines)
-                case 1:
-                    if (ModeClock >= 456)
-                    {
-                        ModeClock = 0;
-                        Line++;
-                        Cpu.Mmu.VblankIntFlag = true;
-
-                        if (Line > 153)
-                        {
-                            // Restart scanning modes
-                            Mode = 2;
-                            Line = 0;
-                        }
-                    }
-                    break;
-            }
-        }
-
-        private void RenderScan()
-        {
-            var scanrow = new byte[160];
-            if (BgSwitch)
-            {
-                // VRAM offset for the tile map
-                var mapoffs = BgMap ? 0x1C00 : 0x1800;
-
-                // Which line of tiles to use in the map
-                mapoffs += ((Line + ScreenY) & 255) >> 3;
-
-                // Which tile to start with in the map line
-                var lineoffs = (ScreenX >> 3);
-
-                // Which line of pixels to use in the tiles
-                var y = (Line + ScreenY) & 7;
-
-                // Where in the tileline to start
-                var x = ScreenX & 7;
-
-                // Where to render on the canvas
-                var canvasoffs = Line * 160;
-
-                // Read tile index from the background map
-                var tile = Vram[mapoffs + lineoffs];
-
-                // If the tile data set in use is #1, the
-                // indices are signed; calculate a real tile offset
-                // huh?
-                // if (_bgtile && tile < 128) tile += 256;
-
-                for (var i = 0; i < 160; i++)
-                {
-                    // Re-map the tile pixel through the palette
-                    var colour = Palette.bg[Tileset[tile][y][x]];
-
-                    // Plot the pixel to canvas
-                    var pixel = Screen[canvasoffs];
-                    pixel.R = colour[0];
-                    pixel.G = colour[1];
-                    pixel.B = colour[2];
-                    pixel.A = colour[3];
-                    canvasoffs++;
-
-                    // Store the pixel for later checking
-                    scanrow[i] = Tileset[tile][y][x];
-
-                    // When this tile ends, read another
-                    x++;
-                    if (x == 8)
-                    {
-                        x = 0;
-                        lineoffs = (lineoffs + 1) & 31;
-                        tile = Vram[mapoffs + lineoffs];
-                        // huh?
-                        // if (_bgtile && tile < 128) tile += 256;
-                    }
-                }
-            }
-            if (ObjSwitch)
-            {
-                for (var i = 0; i < 40; i++)
-                {
-                    var obj = _objdata[i];
-
-                    // Check if this sprite falls on this scanline
-                    if (obj.Y <= Line && (obj.Y + 8) > Line)
-                    {
-                        // Palette to use for this sprite
-                        var pal = obj.Palette ? Palette.obj1 : Palette.obj0;
-
-                        // Where to render on the canvas
-                        var canvasoffs = (Line * 160 + obj.X) * 4;
-
-                        // Data for this line of the sprite
-                        byte[] tilerow;
-
-                        // If the sprite is Y-flipped,
-                        // use the opposite side of the tile
-                        if (obj.YFlip)
-                        {
-                            tilerow = Tileset[obj.Tile]
-                                              [7 - (Line - obj.Y)];
-                        }
-                        else
-                        {
-                            tilerow = Tileset[obj.Tile]
-                                              [Line - obj.Y];
                         }
 
-                        for (int x = 0; x < 8; x++)
+                        if (LcdSwitch)
                         {
-                            // If this pixel is still on-screen, AND
-                            // if it's not colour 0 (transparent), AND
-                            // if this sprite has priority OR shows under the bg
-                            // then render the pixel
-                            if ((obj.X + x) >= 0 && (obj.X + x) < 160 &&
-                               tilerow[x] != 0 &&
-                               (obj.Prio || scanrow[obj.X + x] == 0))
+                            if (BgSwitch)
                             {
-                                // If the sprite is X-flipped,
-                                // write pixels in reverse order
-                                var colour = pal[tilerow[obj.XFlip ? (7 - x) : x]];
+                                var linebase = _curscan;
+                                var mapbase = _bgmapbase + ((((_curline + _yscrl) & 255) >> 3) << 5);
+                                var y = (_curline + _yscrl) & 7;
+                                var x = _xscrl & 7;
+                                var t = (_xscrl >> 3) & 31;
+                                //var pixel;
+                                var w = 160;
 
-                                var pixel = Screen[canvasoffs];
-                                pixel.R = colour[0];
-                                pixel.G = colour[1];
-                                pixel.B = colour[2];
-                                pixel.A = colour[3];
+                                if (BgSwitch)
+                                {
+                                    var tile = Vram[mapbase + t];
+                                    //if (tile < 128) tile = 256 + tile;
+                                    var tilerow = Tileset[tile][y];
+                                    do
+                                    {
+                                        _scanrow[159 - x] = tilerow[x];                                        
+                                        _scrndata[linebase + 3] = Palette.bg[tilerow[x]];
+                                        x++;
+                                        if (x == 8)
+                                        {
+                                            t = (t + 1) & 31;
+                                            x = 0;
+                                            tile = Vram[mapbase + t];
+                                            // if (tile < 128) tile = 256 + tile;
+                                            tilerow = Tileset[tile][y];
+                                        }
+                                        linebase += 4;
+                                    } while (--w > 0);
+                                }
+                                else
+                                {
+                                    var tilerow = Tileset[Vram[mapbase + t]][y];
+                                    do
+                                    {
+                                        _scanrow[159 - x] = tilerow[x];
+                                        _scrndata[linebase + 3] = Palette.bg[tilerow[x]];
+                                        x++;
+                                        if (x == 8) { t = (t + 1) & 31; x = 0; tilerow = Tileset[Vram[mapbase + t]][y]; }
+                                        linebase += 4;
+                                    } while (--w > 0);
+                                }
+                            }
+                            if (ObjSwitch)
+                            {
+                                var cnt = 0;
+                                if (_objsize > 0)
+                                {
+                                    for (var i = 0; i < 40; i++)
+                                    {
+                                    }
+                                }
+                                else
+                                {
+                                    var linebase = _curscan;
+                                    for (var i = 0; i < 40; i++)
+                                    {
+                                        var obj = _objdatasorted[i];
+                                        if (obj.Y <= _curline && (obj.Y + 8) > _curline)
+                                        {
+                                            byte[] tilerow;
+                                            if (obj.YFlip)
+                                                tilerow = Tileset[obj.Tile][7 - (_curline - obj.Y)];
+                                            else
+                                                tilerow = Tileset[obj.Tile][_curline - obj.Y];
 
-                                canvasoffs += 4;
+                                            byte[] pal;
+                                            if (obj.Palette)
+                                            {
+                                                pal = Palette.obj1;
+                                            }
+                                            else
+                                            {
+                                                pal = Palette.obj0;
+                                            }
+
+                                            linebase = (_curline * 160 + obj.X) * 4;
+                                            if (obj.XFlip)
+                                            {
+                                                for (int x = 0; x < 8; x++)
+                                                {
+                                                    if (obj.X + x >= 0 && obj.X + x < 160)
+                                                    {
+                                                        if (tilerow[7 - x] > 0 && (obj.Prio || _scanrow[x] == 0))
+                                                        {
+                                                            _scrndata[linebase + 3] = pal[tilerow[7 - x]];
+                                                        }
+                                                    }
+                                                    linebase += 4;
+                                                }
+                                            }
+                                            else
+                                            {
+                                                for (int x = 0; x < 8; x++)
+                                                {
+                                                    if (obj.X + x >= 0 && obj.X + x < 160)
+                                                    {
+                                                        if (tilerow[x] > 0 && (obj.Prio || _scanrow[x] == 0))
+                                                        {
+                                                            _scrndata[linebase + 3] = pal[tilerow[x]];
+                                                        }
+                                                    }
+                                                    linebase += 4;
+                                                }
+                                            }
+                                            cnt++; if (cnt > 10) break;
+                                        }
+                                    }
+                                }
                             }
                         }
                     }
-                }
+                    break;
             }
-
         }
-
-
 
         private void Reset()
         {
-            //         var c = document.getElementById('screen');
-            //         if (c && c.getContext)
-            //         {
-            //             GPU._canvas = c.getContext('2d');
-            //             if (GPU._canvas)
-            //             {
-            //                 if (GPU._canvas.createImageData)
-            //                     GPU._scrn = GPU._canvas.createImageData(160, 144);
-
-            //                 else if (GPU._canvas.getImageData)
-            //                     GPU._scrn = GPU._canvas.getImageData(0, 0, 160, 144);
-
-            //                 else
-            //                     GPU._scrn = {
-            //                     'width': 160,
-            //'height': 144,
-            //'data': new Array(160 * 144 * 4)
-            //                     };
-
-            //                 // Initialise canvas to white
-            //                 for (var i = 0; i < 160 * 144 * 4; i++)
-            //                     GPU._scrn.data[i] = 255;
-
-            //                 GPU._canvas.putImageData(GPU._scrn, 0, 0);
-            //             }
-            //         }
-
-            Screen = new Pixel[160 * 144];
-            for(int i = 0; i < 160 * 144; i++)
-            {
-                Screen[i] = new Pixel();
-            }
+            _scanrow = new byte[160];
+            _scrndata = new byte[160 * 144 * 4];
             if (DrawEvent != null)
             {
-                DrawEvent.Invoke(this, Screen, new EventArgs());
+                DrawEvent.Invoke(this, _scrndata, new EventArgs());
             }
 
             for (int i = 0; i < 4; i++)
             {
-                Palette.bg[i] = new byte[] { 255, 255, 255, 255 };
-                Palette.obj0[i] = new byte[] { 255, 255, 255, 255 };
-                Palette.obj1[i] = new byte[] { 255, 255, 255, 255 };
+                Palette.bg[i] = 255;
+                Palette.obj0[i] = 255;
+                Palette.obj1[i] = 255;
             }
 
             Tileset = new byte[512][][];
@@ -347,6 +343,42 @@ namespace GameboyEmulator
             }
         }
 
+        private void UpdateOam(ushort addr, byte val)
+        {
+            addr -= 0xFE00;
+            var obj = addr >> 2;
+            if (obj < 40)
+            {
+                switch (addr & 3)
+                {
+                    case 0: _objdata[obj].Y = val - 16; break;
+                    case 1: _objdata[obj].X = val - 8; break;
+                    case 2:
+                        if (_objsize > 0)
+                        {
+                            _objdata[obj].Tile = (val & 0xFE);
+                        }
+                        else
+                        {
+                            _objdata[obj].Tile = val;
+                        }
+                        break;
+                    case 3:
+                        _objdata[obj].Palette = (val & 0x10) > 0;
+                        _objdata[obj].XFlip = (val & 0x20) > 0;
+                        _objdata[obj].YFlip = (val & 0x40) > 0;
+                        _objdata[obj].Prio = (val & 0x80) > 0;
+                        break;
+                }
+            }
+            _objdatasorted = _objdata.OrderByDescending(o => o.X).ThenByDescending(o => o.Num).ToArray();
+            // not exactly equivalent
+            //_objdatasorted.sort(function(a, b){
+            //    if (a.x > b.x) return -1;
+            //    if (a.num > b.num) return -1;
+            //});
+        }
+
         // Takes a value written to VRAM, and updates the
         // internal tile data set
         public void UpdateTile(int addr, byte val)
@@ -381,26 +413,45 @@ namespace GameboyEmulator
             {
                 // LCD Control
                 case 0xFF40:
-                    var r = (BgSwitch ? 0x01 : 0x00) |
-                       (BgMap ? 0x08 : 0x00) |
-                       (BgTile ? 0x10 : 0x00) |
-                       (LcdSwitch ? 0x80 : 0x00);
+                    var r = ( LcdSwitch ? 0x80 : 0) |
+                   ((_winmapbase == 0x1C00) ? 0x40 : 0) |
+                   (_winon ? 0x20 : 0) |
+                    ((_bgtilebase == 0x0000) ? 0x10 : 0) |
+                    ((_bgmapbase == 0x1C00) ? 0x08 : 0) |
+                    (_objsize > 0 ? 0x04 : 0) |
+                    (ObjSwitch ? 0x02 : 0) |
+                    (BgSwitch ? 0x01 : 0);
                     return (byte)r;
+
+                case 0xFF41:
+                    var intf = intfired;
+                    intfired = 0;
+                    return (byte)((intf << 3) | (_curline == _raster ? 4 : 0) | Mode);
 
                 // Scroll Y
                 case 0xFF42:
-                    return ScreenY;
+                    return _yscrl;
 
                 // Scroll X
                 case 0xFF43:
-                    return ScreenX;
+                    return _xscrl;
 
                 // Current scanline
                 case 0xFF44:
-                    return Line;
+                    return _curline;
+
+                case 0xFF45:
+                    return _raster;
+
+                case 0xFF4A:
+                    return _winy;
+
+                case 0xFF4B:
+                    return (byte)(_winx + 7);
 
                 default:
-                    throw new Exception("Unknown address.");
+                    throw new NotImplementedException();
+                    //return _reg[gaddr];
             }
         }
 
@@ -412,19 +463,40 @@ namespace GameboyEmulator
                 case 0xFF40:
                     BgSwitch = val.IsBitSet(0);
                     ObjSwitch = val.IsBitSet(1);
-                    BgMap = val.IsBitSet(4);
-                    BgTile = val.IsBitSet(5);
+                    _objsize = val.IsBitSet(2) ? 1 : 0;
+                    _bgmapbase = val.IsBitSet(3) ? 0x1C00 : 0x1800;
+                    _bgtilebase = val.IsBitSet(4) ? 0x0000 : 0x0800;
+                    _winon = val.IsBitSet(5);
+                    _winmapbase = val.IsBitSet(6) ? 0x1C00 : 0x1800;
                     LcdSwitch = val.IsBitSet(7);
+                    break;
+
+                case 0xFF41:
+                    ints = (byte)((val >> 3) & 15);
                     break;
 
                 // Scroll Y
                 case 0xFF42:
-                    ScreenY = val;
+                    _yscrl = val;
                     break;
 
                 // Scroll X
                 case 0xFF43:
-                    ScreenX = val;
+                    _xscrl = val;
+                    break;
+
+                case 0xFF45:
+                    _raster = val;
+                    break;
+                    
+                // OAM DMA
+                case 0xFF46:
+                    for (var i = 0; i < 160; i++)
+                    {
+                        var v = Cpu.Mmu.ReadByte((val << 8) + i);
+                        _oam[i] = v;
+                        UpdateOam((ushort)(0xFE00 + i), v);
+                    }
                     break;
 
                 // Background palette
@@ -433,10 +505,10 @@ namespace GameboyEmulator
                     {
                         switch ((val >> (i * 2)) & 3)
                         {
-                            case 0: Palette.bg[i] = new byte[] { 255, 255, 255, 255 }; break;
-                            case 1: Palette.bg[i] = new byte[] { 192, 192, 192, 255 }; break;
-                            case 2: Palette.bg[i] = new byte[] { 96, 96, 96, 255 }; break;
-                            case 3: Palette.bg[i] = new byte[] { 0, 0, 0, 255 }; break;
+                            case 0: Palette.bg[i] = 255; break;
+                            case 1: Palette.bg[i] = 192; break;
+                            case 2: Palette.bg[i] = 96; break;
+                            case 3: Palette.bg[i] = 0; break;
                         }
                     }
                     break;
@@ -447,10 +519,10 @@ namespace GameboyEmulator
                     {
                         switch ((val >> (i * 2)) & 3)
                         {
-                            case 0: Palette.obj0[i] = new byte[] { 255, 255, 255, 255 }; break;
-                            case 1: Palette.obj0[i] = new byte[] { 192, 192, 192, 255 }; break;
-                            case 2: Palette.obj0[i] = new byte[] { 96, 96, 96, 255 }; break;
-                            case 3: Palette.obj0[i] = new byte[] { 0, 0, 0, 255 }; break;
+                            case 0: Palette.obj0[i] = 255; break;
+                            case 1: Palette.obj0[i] = 192; break;
+                            case 2: Palette.obj0[i] = 96; break;
+                            case 3: Palette.obj0[i] = 0; break;
                         }
                     }
                     break;
@@ -460,12 +532,20 @@ namespace GameboyEmulator
                     {
                         switch ((val >> (i * 2)) & 3)
                         {
-                            case 0: Palette.obj1[i] = new byte[] { 255, 255, 255, 255 }; break;
-                            case 1: Palette.obj1[i] = new byte[] { 192, 192, 192, 255 }; break;
-                            case 2: Palette.obj1[i] = new byte[] { 96, 96, 96, 255 }; break;
-                            case 3: Palette.obj1[i] = new byte[] { 0, 0, 0, 255 }; break;
+                            case 0: Palette.obj1[i] = 255; break;
+                            case 1: Palette.obj1[i] = 192; break;
+                            case 2: Palette.obj1[i] = 96; break;
+                            case 3: Palette.obj1[i] = 0; break;
                         }
                     }
+                    break;
+
+                case 0xFF4A:
+                    _winy = val;
+                    break;
+
+                case 0xFF4B:
+                    _winx = (byte)(val - 7);
                     break;
             }
         }

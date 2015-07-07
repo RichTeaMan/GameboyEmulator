@@ -12,7 +12,7 @@ namespace GameboyEmulator
         public delegate void ProcessEventHandler(Gameboy sender, EventArgs e);
         public event ProcessEventHandler ProcessEvent;
 
-        public delegate void DrawEventHandler(Gameboy sender, Pixel[] pixels, EventArgs e);
+        public delegate void DrawEventHandler(Gameboy sender, byte[] screenData, EventArgs e);
         public event DrawEventHandler DrawEvent;
 
         public Cpu Cpu { get; private set; }
@@ -43,11 +43,11 @@ namespace GameboyEmulator
             LastProcessTime = DateTime.Now;
         }
 
-        private void Gpu_DrawEvent(Gpu sender, Pixel[] pixels, EventArgs e)
+        private void Gpu_DrawEvent(Gpu sender, byte[] screenData, EventArgs e)
         {
             if(DrawEvent != null)
             {
-                DrawEvent.Invoke(this, pixels, new EventArgs());
+                DrawEvent.Invoke(this, screenData, new EventArgs());
             }
         }
 
@@ -109,7 +109,7 @@ namespace GameboyEmulator
                 }
             }
 
-            Gpu.Step();
+            Gpu.Step(cycles);
             return cycles;
         }
 
