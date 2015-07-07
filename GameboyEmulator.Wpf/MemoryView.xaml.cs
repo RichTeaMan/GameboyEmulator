@@ -26,36 +26,33 @@ namespace GameboyEmulator.Wpf
 
         public void Refresh(Gameboy gameboy)
         {
-            var rowColumn = new DataGridTextColumn();
-            rowColumn.Header = "Address";
-            memGrid.Columns.Add(rowColumn);
-            foreach (var i in Enumerable.Range(0, 16))
-            {
-                var column = new DataGridTextColumn();
-                column.Header = i.ToString("X1");
-                memGrid.Columns.Add(column);
-            }
+            var rows = new List<string>();
+            rows.Add(string.Join("\t", new[] { "Address" }.Concat( Enumerable.Range(0, 16).Select(v => v.ToString("X1")))));
 
-            List<byte> row = null;
+            List<string> row = null;
             foreach (var i in Enumerable.Range(0, ushort.MaxValue))
             {
                 if(i % 16 == 0)
                 {
                     if(row != null)
                     {
-                        var rowData = new List<string>();
-                        rowData.Add(i.ToString("X4"));
-                        rowData.AddRange(row.Select(v => v.ToString("X2")));
-
-                        memGrid.Items.Add(rowData);
+                        rows.Add(string.Join("\t", row));
                     }
-                    row = new List<byte>();
+                    row = new List<string>();
+                    row.Add(i.ToString("X4"));
                 }
-                var value = gameboy.Mmu.ReadByte(i);
+                string value;
+                try
+                {
+                    value = gameboy.Mmu.ReadByte(i).ToString("X2");
+                }
+                catch
+                {
+                    value = "EX";
+                }
                 row.Add(value);
-
             }
-
+            memGrid.Text = string.Join(Environment.NewLine, rows);
         }
     }
 }
