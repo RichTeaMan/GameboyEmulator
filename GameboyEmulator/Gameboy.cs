@@ -27,7 +27,7 @@ namespace GameboyEmulator
         /// <summary>
         /// In kHz.
         /// </summary>
-        public int SimulatedClockSpeed { get; set; } = 4000;
+        public int SimulatedClockSpeed { get; set; } = 4000 * 4;
 
         public Gameboy()
         {
@@ -80,12 +80,10 @@ namespace GameboyEmulator
 
                     // get how many cycles should have happened in this time frame
                     int cycles = (int)(duration.TotalMilliseconds * SimulatedClockSpeed);
-                    Debug.WriteLine("Processing started - {0} cycles to simulate.", cycles);
                     while (cycles > 0)
                     {
                         cycles -= Process();
                     }
-                    Debug.WriteLine("Processing ended.");
                 }
             }
         }
