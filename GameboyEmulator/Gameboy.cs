@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -18,7 +19,15 @@ namespace GameboyEmulator
         public Mmu Mmu { get; private set; }
         public Gpu Gpu { get; private set; }
 
-        public bool Paused { get; set; }
+        public bool Paused { get; private set; }
+        private bool isPaused { get; set; }
+
+        private DateTime LastProcessTime { get; set; }
+
+        /// <summary>
+        /// In kHz.
+        /// </summary>
+        public int SimulatedClockSpeed { get; set; } = 4000;
 
         public Gameboy()
         {
@@ -30,6 +39,8 @@ namespace GameboyEmulator
             Mmu.Gpu = Gpu;
 
             Gpu.DrawEvent += Gpu_DrawEvent;
+
+            LastProcessTime = DateTime.Now;
         }
 
         private void Gpu_DrawEvent(Gpu sender, Pixel[] pixels, EventArgs e)
@@ -39,24 +50,44 @@ namespace GameboyEmulator
                 DrawEvent.Invoke(this, pixels, new EventArgs());
             }
         }
-        
+
+        public void Pause(bool pause)
+        {
+            Paused = pause;
+            while(isPaused != Paused)
+            {
+                Task.Delay(10);
+            }
+        }
+
+
         public void Begin()
         {
-            while(true)
+            while (true)
             {
+                isPaused = Paused;
                 if (Paused)
                 {
-                    Task.Delay(1000);
+                    Task.Delay(1000).Wait();
                 }
                 else
                 {
-                    int cycles = Process();
+                    LastProcessTime = DateTime.Now;
+                    Task.Delay(10).Wait();
 
-                    // much too slow
-                    Task.Delay(cycles * 1);
+                    var now = DateTime.Now;
+                    var duration = now - LastProcessTime;
+
+                    // get how many cycles should have happened in this time frame
+                    int cycles = (int)(duration.TotalMilliseconds * SimulatedClockSpeed);
+                    Debug.WriteLine("Processing started - {0} cycles to simulate.", cycles);
+                    while (cycles > 0)
+                    {
+                        cycles -= Process();
+                    }
+                    Debug.WriteLine("Processing ended.");
                 }
             }
-            
         }
 
         public int Process()
