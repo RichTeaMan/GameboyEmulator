@@ -2,6 +2,8 @@
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics;
+using System.Drawing;
+using System.Drawing.Imaging;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -91,46 +93,62 @@ namespace GameboyEmulator.Wpf
             Gameboy.Begin();
         }
 
+        public static BitmapImage ToBitmapImage(Bitmap bitmap)
+        {
+            using (var memory = new MemoryStream())
+            {
+                bitmap.Save(memory, ImageFormat.Png);
+                memory.Position = 0;
+
+                var bitmapImage = new BitmapImage();
+                bitmapImage.BeginInit();
+                bitmapImage.StreamSource = memory;
+                bitmapImage.CacheOption = BitmapCacheOption.OnLoad;
+                bitmapImage.EndInit();
+
+                return bitmapImage;
+            }
+        }
+
         int frame = 0;
 
-        private void Gameboy_DrawEvent(Gameboy sender, Pixel[] pixels, EventArgs e)
+        private void Gameboy_DrawEvent(Gameboy sender, byte[] screenData, EventArgs e)
         {
-            var bytes = new List<byte>();
-            foreach (var p in pixels)
-            {
-                bytes.Add(p.R);
-                bytes.Add(p.G);
-                bytes.Add(p.B);
-            }
-
-
-            if (bytes.Any(b => b != 255))
-            {
-                int row = 0;
-                var sb = new StringBuilder();
-                sb.AppendLine("<html><body><table><tr>");
-                foreach (var p in pixels)
-                {
-                    var colour = string.Format("#{0}{1}{2}", p.R, p.G, p.B);
-                    sb.AppendLine(string.Format("<td style=\"width: 2px; height: 2px; background-color: {0}; ></td>", colour));
-                    if (row == 160)
-                    {
-                        sb.AppendLine("</tr><tr>");
-                    }
-                }
-                sb.AppendLine("</tr></table></body></html>");
-                File.WriteAllText(string.Format("Frame-{0}.html", frame), sb.ToString());
-                Debug.WriteLine(string.Format("Frame with content {0}", frame));
-            }
-
             frame++;
 
             GameArea.Dispatcher.BeginInvoke((Action)(() =>
             {
-                var _rect = new Int32Rect(0, 0, bitmap.PixelWidth, bitmap.PixelHeight);
-                //Update writeable bitmap with the colorArray to the image.
-                bitmap.WritePixels(_rect, bytes.ToArray(), 160 * 3, 0);
-                GameArea.Source = bitmap;
+                if (frame % 50 == 0)
+                {
+                    int width = 160; // read from file
+                    int height = 144; // read from file
+
+                    BitmapImage img;
+                    using (var bitmap = new Bitmap(width, height))
+                    using (var ms = new MemoryStream(screenData))
+                    {
+                        for (int y = 0; y < height; y++)
+                        {
+                            for (int x = 0; x < width; x++)
+                            {
+                                var r = ms.ReadByte();
+                                var g = ms.ReadByte();
+                                var b = ms.ReadByte();
+                                var a = ms.ReadByte();
+                                bitmap.SetPixel(x, y, System.Drawing.Color.FromArgb(a, r, g, b));
+                            }
+                        }
+                        //bitmap.Save(string.Format("Frame-{0}.bmp", frame));
+
+                        img = ToBitmapImage(bitmap);
+
+                    }
+
+                    //var _rect = new Int32Rect(0, 0, bitmap.PixelWidth, bitmap.PixelHeight);
+                    //Update writeable bitmap with the colorArray to the image.
+                    //   bitmap.WritePixels(_rect, screenData, 160 * 4, 0);
+                    GameArea.Source = img;
+                }
             }));
 
         }
