@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -446,8 +447,8 @@ namespace GameboyEmulator
                     return (byte)(_winx + 7);
 
                 default:
-                    throw new NotImplementedException();
-                    //return _reg[gaddr];
+                    Debug.WriteLine("Unknown address read from GPU: {0:X4}", addr);
+                    return 0;
             }
         }
 
@@ -542,6 +543,10 @@ namespace GameboyEmulator
 
                 case 0xFF4B:
                     _winx = (byte)(val - 7);
+                    break;
+
+                default:
+                    Debug.WriteLine("Unknown address written tp GPU: {0:X4} - {1:X2}", addr, val);
                     break;
             }
         }
