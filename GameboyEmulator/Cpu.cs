@@ -135,7 +135,7 @@ namespace GameboyEmulator
         public bool OperationFlag
         {
             get { return RegF.IsBitSet(6); }
-            set { RegF.BitSet(6, value); }
+            set { RegF = RegF.BitSet(6, value); }
         }
 
         /// <summary>
@@ -145,7 +145,7 @@ namespace GameboyEmulator
         public bool HalfCarryFlag
         {
             get { return RegF.IsBitSet(5); }
-            set { RegF.BitSet(5, value); }
+            set { RegF = RegF.BitSet(5, value); }
         }
 
         /// <summary>
@@ -155,7 +155,7 @@ namespace GameboyEmulator
         public bool CarryFlag
         {
             get { return RegF.IsBitSet(4); }
-            set { RegF.BitSet(4, value); }
+            set { RegF = RegF.BitSet(4, value); if (CarryFlag != value) throw new Exception(); }
         }
 
         public Mmu Mmu { get; set; }
@@ -500,14 +500,15 @@ namespace GameboyEmulator
             return result;
         }
 
-        private byte RotateLeftThrough(byte value)
+        private byte RotateLeftThroughCarry(byte value)
         {
-            var ci = CarryFlag ? 1 : 0;
-            var co = (value & 0x80) > 0 ? 0x10 : 0;
-            byte result = (byte)((value << 1) + ci);
-            //Z80._r.c &= 255;
-            ZeroFlag = result > 0;
-            RegF = (byte)((RegF & 0xEF) + co);
+            byte result = (byte)(value << 1);
+            if(CarryFlag)
+            {
+                result++;
+            }
+            ZeroFlag = result == 0;
+            CarryFlag = value.IsBitSet(7);
             return result;
         }
 
@@ -2119,12 +2120,7 @@ namespace GameboyEmulator
         [Op(0x17, 4, "RLA")]
         void RLA()
         {
-            
-            var ci = CarryFlag ? 1 : 0;
-            var co = (RegA & 0x80) > 0 ? 0x10 : 0;
-            RegA = (byte)((RegA << 1) + ci);
-            //Z80._r.a &= 255;
-            RegF = (byte)((RegF & 0xEF) + co);
+            RL_A();
         }
 
         [Op(0x0F, 4, "RCRA")]
@@ -2191,49 +2187,49 @@ namespace GameboyEmulator
         [CbOp(0x17, 8, "RL A")]
         void RL_A()
         {
-            RegA = RotateLeftThrough(RegA);
+            RegA = RotateLeftThroughCarry(RegA);
         }
 
         [CbOp(0x10, 8, "RL B")]
         void RL_B()
         {
-            RegB = RotateLeftThrough(RegB);
+            RegB = RotateLeftThroughCarry(RegB);
         }
 
         [CbOp(0x11, 8, "RL C")]
         void RL_C()
         {
-            RegC = RotateLeftThrough(RegC);
+            RegC = RotateLeftThroughCarry(RegC);
         }
 
         [CbOp(0x12, 8, "RL D")]
         void RL_D()
         {
-            RegD = RotateLeftThrough(RegD);
+            RegD = RotateLeftThroughCarry(RegD);
         }
 
         [CbOp(0x13, 8, "RL E")]
         void RL_E()
         {
-            RegE = RotateLeftThrough(RegE);
+            RegE = RotateLeftThroughCarry(RegE);
         }
 
         [CbOp(0x14, 8, "RL H")]
         void RL_H()
         {
-            RegH = RotateLeftThrough(RegH);
+            RegH = RotateLeftThroughCarry(RegH);
         }
 
         [CbOp(0x15, 8, "RL L")]
         void RL_L()
         {
-            RegL = RotateLeftThrough(RegL);
+            RegL = RotateLeftThroughCarry(RegL);
         }
 
         [CbOp(0x16, 16, "RL A")]
         void RL_HL()
         {
-            var result = RotateLeftThrough(Mmu.ReadByte(HL));
+            var result = RotateLeftThroughCarry(Mmu.ReadByte(HL));
             Mmu.WriteByte(HL, result);
         }
 
