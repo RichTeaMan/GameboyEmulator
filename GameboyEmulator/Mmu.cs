@@ -174,13 +174,24 @@ namespace GameboyEmulator
                 }
                 else
                 {
-                    if (address <= 0x00FF && InBios)
-                    {
-                        array = Bios;
-                    }
-                    else if (Cpu.PC == 0x100)
+                    if (Cpu.PC == 0x100)
                     {
                         InBios = false;
+                        array = Rom;
+                    }
+                    else if (address <= 0x00FF)
+                    {
+                        if (InBios)
+                        {
+                            array = Bios;
+                        }
+                        else
+                        {
+                            array = Rom;
+                        }
+                    }
+                    else
+                    {
                         array = Rom;
                     }
                 }
