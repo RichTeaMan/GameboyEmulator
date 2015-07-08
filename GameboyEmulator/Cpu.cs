@@ -502,14 +502,12 @@ namespace GameboyEmulator
 
         private byte RotateLeftThrough(byte value)
         {
-            var oldCarry = CarryFlag;
-            CarryFlag = value.IsBitSet(7);
-            var result = (byte)(value << 1);
-            if (oldCarry)
-                result = result.BitSet(7);
-            ZeroFlag = result == 0;
-            OperationFlag = false;
-            HalfCarryFlag = false;
+            var ci = CarryFlag ? 1 : 0;
+            var co = (value & 0x80) > 0 ? 0x10 : 0;
+            byte result = (byte)((value << 1) + ci);
+            //Z80._r.c &= 255;
+            ZeroFlag = result > 0;
+            RegF = (byte)((RegF & 0xEF) + co);
             return result;
         }
 
@@ -1176,6 +1174,7 @@ namespace GameboyEmulator
         [Op(0x11, 12, "LD DE nn")]
         void LD_DEnn()
         {
+            
             RegE = ReadByte();
             RegD = ReadByte();
         }
@@ -2120,7 +2119,12 @@ namespace GameboyEmulator
         [Op(0x17, 4, "RLA")]
         void RLA()
         {
-            RL_A();
+            
+            var ci = CarryFlag ? 1 : 0;
+            var co = (RegA & 0x80) > 0 ? 0x10 : 0;
+            RegA = (byte)((RegA << 1) + ci);
+            //Z80._r.a &= 255;
+            RegF = (byte)((RegF & 0xEF) + co);
         }
 
         [Op(0x0F, 4, "RCRA")]
